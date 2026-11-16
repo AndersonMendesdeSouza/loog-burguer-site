@@ -2,7 +2,7 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  width: calc(100% + 10px);
+  width: 100%;
   min-width: 0;
   height: 100%;
   border: 1px solid var(--border-color);
