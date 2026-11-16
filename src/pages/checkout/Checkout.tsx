@@ -27,6 +27,8 @@ import { UserService } from "../../service/user.service";
 import { getRequestErrorMessage } from "../../utils/getRequestErrorMessage";
 import TableIdentifiedModal from "../../components/TableIdentifiedMesa/TableIdentifiedModal";
 import { useAuth } from "../../contexts/AuthContext";
+import AuthRequiredModal from "../../components/AuthRequiredModal/AuthRequiredModal";
+import { isAxiosError } from "axios";
 
 type CartItem = {
   id: string;
@@ -94,7 +96,8 @@ function formatAddressDetails(address: AddressResponseDto) {
 export default function Checkout() {
   const nav = useNavigate();
   const location = useLocation();
-  const { isAuthenticated, loading: authLoading } = useAuth();
+  const { isAuthenticated, loading: authLoading, logout } = useAuth();
+  const [showAuthRequired, setShowAuthRequired] = useState(false);
   const state = (location.state || {}) as Partial<CheckoutNavState>;
   const items = state.items || [];
   const baseDeliveryFee =
@@ -162,7 +165,15 @@ export default function Checkout() {
   }, [isAuthenticated]);
 
   useEffect(() => {
-    if (isTableOrder || !isAuthenticated || authLoading) return;
+    if (authLoading) return;
+    if (!isAuthenticated) {
+      setSavedAddresses([]);
+      setSelectedAddressId(null);
+      setAddressError("");
+      setLoadingAddresses(false);
+      return;
+    }
+    if (isTableOrder) return;
 
     let active = true;
 
@@ -192,6 +203,11 @@ export default function Checkout() {
         setSelectedAddressId(selected?.id ?? null);
       } catch (error) {
         if (active) {
+          if (isAxiosError(error) && error.response?.status === 401) {
+            logout();
+            setShowAuthRequired(true);
+            return;
+          }
           setAddressError(
             getRequestErrorMessage(
               error,
@@ -360,7 +376,7 @@ export default function Checkout() {
           onConfirm={() => void handleCreateOrder(true)}
         />
       )}
-      <div className={styles.content}>
+      <div className={styles.content} data-enter="page">
         <header className={styles.header}>
           <button
             className={styles.iconBtn}
@@ -541,9 +557,10 @@ export default function Checkout() {
                 <button
                   type="button"
                   className={styles.useNewBtn}
-                  onClick={() => nav("/login")}
+                  onClick={() => setShowAuthRequired(true)}
+                  disabled={authLoading}
                 >
-                  Entrar na conta
+                  {authLoading ? "Verificando acesso..." : "Entrar ou criar conta"}
                 </button>
               </div>
             ) : addressError ? (
@@ -823,6 +840,12 @@ export default function Checkout() {
           </span>
         </button>
       </div>
+      {showAuthRequired && (
+        <AuthRequiredModal
+          description="Entre ou crie uma conta para cadastrar seu endereço e receber o pedido em casa."
+          onClose={() => setShowAuthRequired(false)}
+        />
+      )}
     </div>
   );
 }

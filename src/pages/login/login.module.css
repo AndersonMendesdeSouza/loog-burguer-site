@@ -1,92 +1,202 @@
 .screen {
-  min-height: 100dvh;
-  height: 100dvh;
   display: flex;
-  align-items: stretch;
-  justify-content: center;
-  padding: 0;
-  background: var(--bg-primary);
-  color: var(--text-primary);
+  flex-direction: column;
+  height: 100dvh;
+  min-height: 0;
   overflow: hidden;
+  background:
+    linear-gradient(180deg, rgba(22, 11, 7, 0.58), var(--bg-primary) 85%),
+    url('/burger-hero-mobile-banner.png') center top / cover no-repeat;
+  color: var(--text-primary);
+}
+
+.siteHeader {
+  padding: 28px 20px 20px;
+}
+
+.headerInner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-primary);
+  text-decoration: none;
+}
+
+.brand > svg {
+  width: 45px;
+  height: 45px;
+  color: var(--highlight);
+  stroke-width: 1.6;
+}
+
+.brandText {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.brandName {
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.8px;
+}
+
+.brandSubtitle {
+  color: var(--highlight);
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 2.6px;
+  text-transform: uppercase;
+}
+
+.navigation {
+  display: none;
 }
 
 .card {
-  width: min(100%, 430px);
-  min-height: 100dvh;
-  background:
-    radial-gradient(480px 260px at 50% 8%, rgba(255, 215, 0, 0.1), transparent 68%),
-    var(--bg-secondary);
-  overflow: hidden;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding-bottom: 28px;
 }
 
 .hero {
-  height: 292px;
-  background:
-    linear-gradient(180deg, rgba(18, 18, 18, 0) 46%, var(--bg-secondary) 99%),
-    radial-gradient(circle at 50% 14%, rgba(255, 255, 255, 0.08), transparent 38%),
-    url("https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=900&q=90");
-  background-size: cover;
-  background-position: center top;
+  min-width: 0;
+}
+
+.welcome {
+  position: relative;
+  z-index: 1;
+  padding: 12px 16px 0;
+  text-align: center;
+  padding: 20px;
+}
+
+.welcome h1 {
+  margin: 0;
+  font-size: clamp(34px, 10vw, 46px);
+  font-weight: 800;
+  font-style: italic;
+  line-height: 1.1;
+  letter-spacing: -1px;
+}
+
+.welcome h1 > span {
+  display: block;
+}
+
+.welcome .welcomeAccent {
+  position: relative;
+  width: fit-content;
+  margin: -2px auto 0;
+  padding: 0 6px 9px;
+  color: var(--highlight);
+  font-family: 'Yellowtail', cursive;
+  font-size: clamp(57px, 17vw, 78px);
+  font-weight: 400;
+  font-style: normal;
+  line-height: 1;
+  letter-spacing: 0;
+}
+
+.welcomeAccent::after {
+  position: absolute;
+  right: 8px;
+  bottom: 0;
+  left: 18px;
+  height: 9px;
+  border-top: 3px solid var(--highlight);
+  border-radius: 50%;
+  content: '';
+  transform: rotate(-3deg);
+}
+
+.welcome p {
+  margin: 14px auto 0;
+  color: var(--text-primary);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.heroImage {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin-top: 4px;
+  mask-image: linear-gradient(180deg, transparent, #000 12%, #000 83%, transparent);
 }
 
 .content {
-  margin-top: -68px;
-  padding: 0 20px 26px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  max-height: 100%;
+  width: calc(100% - 32px);
+  max-width: 430px;
+  margin: -32px auto 0;
+  padding: 24px 20px;
   position: relative;
   z-index: 1;
+  border: 1px solid transparent;
+  border-radius: 22px;
+  background:
+    radial-gradient(ellipse at top right, rgba(255, 174, 0, 0.13), transparent 40%) padding-box,
+    radial-gradient(ellipse at bottom left, rgba(255, 174, 0, 0.1), transparent 40%) padding-box,
+    linear-gradient(145deg, #140b07, #21120d) padding-box,
+    radial-gradient(ellipse at top right, #ffd000, transparent 45%) border-box,
+    radial-gradient(ellipse at bottom left, #ffd000, #795038 45%, rgba(183, 123, 91, 0.38) 65%) border-box;
 }
 
-.header {
-  text-align: center;
-  padding-bottom: 16px;
-  margin-bottom: 24px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+.formBrand {
+  display: none;
+  flex-shrink: 0;
 }
 
-.header h1 {
-  margin: 0;
-  color: var(--highlight);
-  font-size: 38px;
-  font-weight: 900;
-  line-height: 1;
-}
-
-.header p {
-  margin: 10px 0 0;
-  color: rgba(204, 204, 204, 0.9);
-  font-size: 14px;
-  font-weight: 500;
+.formScroll {
+  min-height: 0;
+  overflow-y: auto;
+  padding: 4px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 208, 0, 0.65) transparent;
 }
 
 .form {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 18px;
 }
 
 .fieldGroup {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 7px;
 }
 
 .label {
-  color: rgba(231, 220, 190, 0.86);
+  color: var(--text-primary);
   font-size: 14px;
   font-weight: 700;
-  letter-spacing: 0.8px;
 }
 
 .inputShell {
-  min-height: 48px;
+  min-height: 46px;
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 0 16px;
-  border: 1px solid rgba(255, 215, 0, 0.22);
+  gap: 10px;
+  padding: 0 12px;
+  border: 1px solid var(--border-color);
   border-radius: 9px;
-  background: rgba(255, 255, 255, 0.04);
-  color: rgba(204, 204, 204, 0.76);
+  background: rgba(255, 255, 255, 0.025);
+  color: var(--text-secondary);
 }
 
 .inputShell:focus-within {
@@ -111,12 +221,13 @@
   outline: 0;
   background: transparent;
   color: var(--text-primary);
-  font-size: 14px;
+  font: inherit;
+  font-size: 16px;
   font-weight: 500;
 }
 
 .inputShell input::placeholder {
-  color: rgba(204, 204, 204, 0.72);
+  color: var(--text-secondary);
 }
 
 .iconButton {
@@ -127,7 +238,7 @@
   place-items: center;
   border: 0;
   background: transparent;
-  color: rgba(204, 204, 204, 0.82);
+  color: var(--text-secondary);
   cursor: pointer;
 }
 
@@ -142,9 +253,8 @@
   align-self: flex-end;
   margin-top: -4px;
   color: var(--highlight);
-  font-size: 14px;
-  font-weight: 800;
-  letter-spacing: 0.8px;
+  font-size: 12px;
+  font-weight: 700;
   text-decoration: none;
 }
 
@@ -158,10 +268,10 @@
   border-radius: 9px;
   background: var(--highlight);
   color: #111;
-  font-size: 16px;
-  font-weight: 900;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 700;
   cursor: pointer;
-  box-shadow: 0 14px 28px rgba(255, 215, 0, 0.14);
 }
 
 .submitButton:disabled {
@@ -194,16 +304,19 @@
 }
 
 .signupText {
-  margin: 32px 0 0;
+  margin: 22px 0 0;
+  padding-top: 18px;
+  border-top: 1px solid var(--border-color);
   text-align: center;
-  color: rgba(204, 204, 204, 0.72);
-  font-size: 14px;
+  color: var(--text-secondary);
+  font-size: 12px;
   font-weight: 500;
 }
 
 .signupText a {
+  margin-left: 5px;
   color: var(--highlight);
-  font-weight: 900;
+  font-weight: 700;
   text-decoration: none;
 }
 
@@ -214,106 +327,305 @@
 }
 
 .toastTitle {
-  color: #fff;
+  color: var(--text-primary);
   font-size: 14px;
   font-weight: 900;
 }
 
 .toastMessage {
-  color: rgba(255, 255, 255, 0.78);
+  color: var(--text-secondary);
   font-size: 13px;
   font-weight: 600;
   line-height: 1.35;
   white-space: pre-line;
 }
 
-@media (max-width: 360px) {
-  .hero {
-    height: 295px;
-  }
-
-  .content {
-    padding-inline: 16px;
-  }
-
-  .header h1 {
-    font-size: 38px;
-  }
+.benefits {
+  display: none;
 }
 
-@media (min-width: 760px) {
+.brand:focus-visible,
+.navigation a:focus-visible,
+.forgotLink:focus-visible,
+.signupText a:focus-visible,
+.iconButton:focus-visible,
+.submitButton:focus-visible {
+  outline: 2px solid var(--highlight);
+  outline-offset: 4px;
+}
+
+@media (max-width: 900px) {
   .screen {
-    align-items: center;
-    padding: 18px;
-    background:
-      radial-gradient(900px 520px at 18% 50%, rgba(255, 215, 0, 0.08), transparent 62%),
-      var(--bg-primary);
+    position: relative;
+    isolation: isolate;
+    background: #0b0402;
+  }
+
+  .siteHeader {
+    position: relative;
+    z-index: 2;
+    flex: 0 0 64px;
+    height: 64px;
+    padding: 12px 16px;
+  }
+
+  .headerInner {
+    height: 100%;
+  }
+
+  .siteHeader .brand > svg {
+    width: 36px;
+    height: 36px;
+  }
+
+  .siteHeader .brandName {
+    font-size: 24px;
+  }
+
+  .siteHeader .brandSubtitle {
+    font-size: 7px;
   }
 
   .card {
-    width: min(980px, 100%);
-    height: min(620px, calc(100dvh - 36px));
-    min-height: 0;
     display: grid;
-    grid-template-columns: minmax(340px, 1fr) minmax(360px, 440px);
-    border: 1px solid rgba(255, 255, 255, 0.07);
-    border-radius: 18px;
-    box-shadow: 0 22px 64px rgba(0, 0, 0, 0.42);
+    flex: 1;
+    min-height: 0;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) auto;
+    gap: 8px;
+    padding: 0 16px max(12px, env(safe-area-inset-bottom));
   }
 
   .hero {
-    height: auto;
-    min-height: 100%;
-    background:
-      linear-gradient(90deg, rgba(18, 18, 18, 0.08) 0%, rgba(18, 18, 18, 0.34) 72%, var(--bg-secondary) 100%),
-      radial-gradient(circle at 44% 26%, rgba(255, 255, 255, 0.09), transparent 36%),
-      url("https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=1300&q=90");
-    background-size: cover;
-    background-position: center;
+    position: relative;
+    isolation: isolate;
+    min-height: 0;
+    padding: 0;
+  }
+
+  .hero::before {
+    position: absolute;
+    top: -64px;
+    right: -16px;
+    bottom: 0;
+    left: -16px;
+    z-index: -1;
+    background: url('/login-banner-mobile.png') center 80% / cover no-repeat;
+    content: '';
+    pointer-events: none;
+  }
+
+  .welcome {
+    padding-top: 8px;
+  }
+
+  .welcome h1 {
+    font-size: 28px;
+  }
+
+  .welcome .welcomeAccent {
+    font-size: 46px;
+  }
+
+  .welcome p {
+    display: none;
+  }
+
+  .heroImage {
+    display: none;
   }
 
   .content {
-    margin-top: 0;
+    width: 100%;
+    max-width: 430px;
+    margin: 0 auto;
+    padding: 16px;
+  }
+
+  .form {
+    gap: 14px;
+  }
+
+  .fieldGroup {
+    gap: 6px;
+  }
+
+  .label {
+    font-size: 13px;
+  }
+
+  .inputShell,
+  .submitButton {
+    min-height: 44px;
+  }
+
+  .signupText {
+    margin-top: 16px;
+    padding-top: 14px;
+  }
+}
+
+@media (max-width: 900px) and (max-height: 780px) {
+  .hero::before {
+    background-size: auto 100%;
+    background-position: center bottom;
+  }
+}
+
+@media (max-width: 900px) and (max-height: 600px) {
+  .hero {
+    display: none;
+  }
+
+  .card {
+    grid-template-rows: minmax(0, 1fr);
+    align-items: center;
+    gap: 0;
+  }
+}
+
+@media (min-width: 901px) {
+  .screen {
+    padding-top: 70px;
+    background: #0b0402 url('/login-banner-desktop.png') left 70px / auto calc(100dvh - 70px) no-repeat;
+  }
+
+  .siteHeader {
+    position: fixed;
+    top: 0;
+    right: 0;
+    left: 0;
+    z-index: 110;
+    height: 70px;
+    padding: 0 40px;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--bg-primary);
+  }
+
+  .headerInner {
+    height: 100%;
+    justify-content: space-between;
+  }
+
+  .siteHeader .brand > svg {
+    width: 36px;
+    height: 36px;
+  }
+
+  .siteHeader .brandName {
+    font-size: 24px;
+  }
+
+  .navigation {
     display: flex;
-    flex-direction: column;
+    align-items: center;
+    gap: 32px;
+  }
+
+  .navigation a {
+    padding: 10px 0;
+    color: var(--text-primary);
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .navigation a:hover,
+  .forgotLink:hover,
+  .signupText a:hover {
+    color: var(--highlight);
+    text-decoration: underline;
+    text-underline-offset: 5px;
+  }
+
+  .card {
+    flex: 1;
+    display: grid;
+    grid-template-columns: minmax(0, 1.25fr) minmax(340px, 0.9fr);
+    align-content: center;
+    align-items: center;
+    gap: 0 24px;
+    min-height: 0;
+    grid-template-rows: minmax(0, 1fr) auto;
+    padding: 24px 40px 20px;
+  }
+
+  .hero {
+    align-self: stretch;
+  }
+
+  .welcome {
+    padding-top: 0;
+  }
+
+  .welcome h1 {
+    font-size: clamp(36px, 3.4vw, 46px);
+  }
+
+  .welcome .welcomeAccent {
+    font-size: clamp(58px, 5vw, 70px);
+  }
+
+  .welcome p {
+    margin-top: 10px;
+    font-size: 13px;
+  }
+
+  .heroImage {
+    display: none;
+  }
+
+  .content {
+    width: 100%;
+    margin: 0 auto;
+    max-width: 390px;
+    padding: 24px;
+  }
+
+  .formBrand {
+    display: flex;
     justify-content: center;
-    padding: 40px 44px 34px;
-  }
-
-  .header {
-    text-align: left;
-    margin-bottom: 26px;
-    padding-bottom: 18px;
-  }
-
-  .header h1 {
-    font-size: 40px;
-  }
-
-  .header p {
-    font-size: 15px;
+    margin-bottom: 24px;
   }
 
   .form {
     gap: 18px;
   }
 
-  .inputShell {
-    min-height: 50px;
-  }
-
-  .submitButton {
-    min-height: 50px;
-  }
-
+  .forgotLink,
   .signupText {
-    margin-top: 28px;
+    font-size: 13px;
   }
-}
 
-@media (min-width: 1180px) {
-  .card {
-    width: min(1040px, 100%);
-    height: min(640px, calc(100dvh - 36px));
+  .benefits {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    width: 100%;
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 10px 0 0;
+    list-style: none;
+  }
+
+  .benefits li {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    text-align: center;
+    font-size: 12px;
+    line-height: 1.4;
+  }
+
+  .benefits li + li {
+    border-left: 1px solid var(--border-color);
+  }
+
+  .benefits svg {
+    width: 28px;
+    height: 28px;
+    color: var(--highlight);
+    stroke-width: 1.8;
   }
 }

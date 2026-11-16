@@ -1,5 +1,7 @@
 .indicator {
   position: fixed;
+  top: var(--site-header-height, 0px);
+  pointer-events: none;
   display: flex;
   text-align: center;
   z-index: 80;
@@ -27,5 +29,13 @@
   .indicator {
     padding-right: 12px;
     padding-left: 12px;
+  }
+}
+
+@media (min-width: 901px) {
+  .indicator {
+    top: 70px;
+    z-index: 120;
+    pointer-events: none;
   }
 }

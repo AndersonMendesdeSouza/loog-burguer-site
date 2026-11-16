@@ -32,6 +32,9 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { OrderService } from "../../service/order.service";
 import type { OrderResponseDto } from "../../dtos/response/order-response.dto";
 import { formatOrderCode } from "../../utils/formatOrderCode";
+import EditProfileModal from "../../components/EditProfileModal/EditProfileModal";
+import AuthRequiredModal from "../../components/AuthRequiredModal/AuthRequiredModal";
+import { isAxiosError } from "axios";
 
 const profileActions = [
   {
@@ -137,9 +140,13 @@ export default function Profile() {
   const navigate = useNavigate();
   const locationState = (location.state || {}) as { openAddresses?: boolean };
   const [user, setUser] = useState<UserResponseDto>();
+  const [loadingUser, setLoadingUser] = useState(true);
+  const [userError, setUserError] = useState("");
+  const [showEditProfile, setShowEditProfile] = useState(false);
+  const [profileSuccess, setProfileSuccess] = useState("");
+  const [authRequest, setAuthRequest] = useState<"profile" | "addresses" | null>(null);
   const [activeOption, setActiveOption] = useState<string | null>(null);
   const [showLogoutModal, setShowLogoutModal] = useState<boolean>(false);
-  const [reloading, setReloading] = useState<boolean>(false);
   const [showAddressScreen, setShowAddressScreen] = useState(
     Boolean(locationState.openAddresses),
   );
@@ -157,13 +164,15 @@ export default function Profile() {
   const [recentOrder, setRecentOrder] = useState<OrderResponseDto | null>(null);
   const [loadingOrder, setLoadingOrder] = useState(true);
   const [orderError, setOrderError] = useState("");
-  const hasLoadedUser = useRef(false);
   const optionEffectTimeoutRef = useRef<number | null>(null);
   const optionActionTimeoutRef = useRef<number | null>(null);
-  const { logout: contextLogout } = useAuth();
+  const { logout: contextLogout, isAuthenticated, loading: authLoading } = useAuth();
 
-  function invert() {
-    setReloading((a) => !a);
+  function handleAuthenticationError(error: unknown, reason: "profile" | "addresses") {
+    if (!isAxiosError(error) || error.response?.status !== 401) return false;
+    contextLogout();
+    setAuthRequest(reason);
+    return true;
   }
 
   function updateAddressField<K extends keyof AddressFormState>(
@@ -213,6 +222,7 @@ export default function Profile() {
   }
 
   async function loadAddresses() {
+    if (!isAuthenticated || authLoading) return;
     setLoadingAddresses(true);
 
     try {
@@ -227,6 +237,7 @@ export default function Profile() {
       setAddresses(sorted);
       setAddressError("");
     } catch (error) {
+      if (handleAuthenticationError(error, "addresses")) return;
       setAddressError(
         getRequestErrorMessage(error, "Não foi possível carregar endereços."),
       );
@@ -236,6 +247,10 @@ export default function Profile() {
   }
 
   async function handleSaveAddress() {
+    if (!isAuthenticated) {
+      setAuthRequest("addresses");
+      return;
+    }
     if (!isAddressFormValid()) {
       setAddressError("Preencha rua, número, bairro, cidade, UF e CEP.");
       return;
@@ -266,6 +281,7 @@ export default function Profile() {
       setIsAddressFormOpen(false);
       await loadAddresses();
     } catch (error) {
+      if (handleAuthenticationError(error, "addresses")) return;
       setAddressError(
         getRequestErrorMessage(error, "Não foi possível salvar o endereço."),
       );
@@ -275,6 +291,10 @@ export default function Profile() {
   }
 
   async function handleDeleteAddress(id: string) {
+    if (!isAuthenticated) {
+      setAuthRequest("addresses");
+      return;
+    }
     const shouldDelete = window.confirm("Deseja excluir este endereço?");
     if (!shouldDelete) return;
 
@@ -289,6 +309,7 @@ export default function Profile() {
       }
       setAddressError("");
     } catch (error) {
+      if (handleAuthenticationError(error, "addresses")) return;
       setAddressError(
         getRequestErrorMessage(error, "Não foi possível excluir o endereço."),
       );
@@ -298,36 +319,64 @@ export default function Profile() {
   }
 
   useEffect(() => {
-    if (hasLoadedUser.current) {
+    if (authLoading) return;
+    if (!isAuthenticated) {
+      setUser(undefined);
+      setUserError("");
+      setLoadingUser(false);
+      setProfileSuccess("");
+      setShowEditProfile(false);
       return;
     }
 
-    hasLoadedUser.current = true;
-    const storedUserId = localStorage.getItem("userId");
-
-    if (!storedUserId) {
-      invert();
-      return;
-    }
+    let active = true;
+    setLoadingUser(true);
 
     const loadUser = async () => {
       try {
-        const data = await UserService.findOne(storedUserId);
+        const authenticatedUser = await UserService.me();
+        if (!active) return;
+        const data = await UserService.findOne(authenticatedUser.id);
+        if (!active) return;
         setUser(data);
+        setUserError("");
       } catch (error) {
-        alert("Erro ao buscar usuário");
-        console.error(error);
+        if (active) {
+          if (handleAuthenticationError(error, "profile")) return;
+          setUserError(getRequestErrorMessage(error, "Não foi possível carregar seus dados. Atualize a página e tente novamente."));
+        }
+      } finally {
+        if (active) setLoadingUser(false);
       }
     };
-    loadUser();
-  }, [reloading]);
+    void loadUser();
+    return () => { active = false; };
+  }, [isAuthenticated, authLoading]);
 
   useEffect(() => {
+    if (authLoading) return;
+    if (!isAuthenticated) {
+      setAddresses([]);
+      setAddressError("");
+      setIsAddressFormOpen(false);
+      return;
+    }
     void loadAddresses();
-  }, []);
+  }, [isAuthenticated, authLoading]);
 
   useEffect(() => {
+    if (!authLoading && !isAuthenticated && locationState.openAddresses) {
+      setAuthRequest("addresses");
+      setShowAddressScreen(false);
+    }
+  }, [authLoading, isAuthenticated, locationState.openAddresses]);
+
+  useEffect(() => {
+    if (authLoading) return;
     let active = true;
+    setLoadingOrder(true);
+    setRecentOrder(null);
+    setOrderError("");
 
     async function loadRecentOrder() {
       try {
@@ -339,6 +388,7 @@ export default function Profile() {
       } catch (error) {
         if (!active) return;
 
+        if (handleAuthenticationError(error, "profile")) return;
         setOrderError(
           getRequestErrorMessage(error, "Não foi possível carregar o pedido recente."),
         );
@@ -352,7 +402,7 @@ export default function Profile() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [isAuthenticated, authLoading]);
 
   useEffect(() => {
     return () => {
@@ -398,7 +448,15 @@ export default function Profile() {
       title: "Editar perfil",
       subtitle: "Nome, e-mail e telefone",
       icon: User,
-      onClick: () => alert("Edit"),
+      onClick: () => {
+        if (!isAuthenticated) {
+          setAuthRequest("profile");
+          return;
+        }
+        if (!user) return;
+        setProfileSuccess("");
+        setShowEditProfile(true);
+      },
     },
     // {
     //   title: "Notificações",
@@ -410,7 +468,7 @@ export default function Profile() {
       title: "Ajuda e suporte",
       subtitle: "Fale conosco",
       icon: CircleHelp,
-      onClick: () => alert("Help"),
+      onClick: () => window.location.assign("https://wa.me/5564999999687"),
     },
     // {
     //   title: "Configurações",
@@ -419,35 +477,56 @@ export default function Profile() {
     //   onClick: () => alert("config"),
     // },
     {
-      title: "Sair da conta",
-      subtitle: "Encerrar sessão",
-      icon: LogOut,
-      onClick: () => setShowLogoutModal(true),
+      title: isAuthenticated ? "Sair da conta" : "Entrar na conta",
+      subtitle: isAuthenticated ? "Encerrar sessão" : "Acessar ou criar sua conta",
+      icon: isAuthenticated ? LogOut : User,
+      onClick: () => {
+        if (!isAuthenticated) {
+          setAuthRequest("profile");
+          return;
+        }
+        setShowLogoutModal(true);
+      },
     },
   ];
 
   return (
     <div className={styles.screen}>
-      <main className={styles.content}>
+      <main className={styles.content} data-enter="page">
         <section className={styles.profileCard}>
-          <img
-            className={styles.avatar}
-            src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=240&q=80"
-            alt={user?.name ?? "Cliente não definido"}
-          />
+          <div className={styles.avatar} aria-hidden="true">
+            <User />
+          </div>
 
           <div className={styles.profileInfo}>
-            <h1 style={{ fontSize: "25px", fontWeight: "900" }}>
-              {user?.name ?? "Cliente não definido"}
-            </h1>
-            <span>
-              <Star size={14} />
-              Cliente desde {formatRegistrationDate(user?.dateRegistration)}
-            </span>
+            {!authLoading && !isAuthenticated ? (
+              <>
+                <h1>Você não está logado</h1>
+                <button className={styles.guestLogin} type="button" onClick={() => setAuthRequest("profile")}>
+                  Entrar ou criar conta
+                </button>
+              </>
+            ) : (
+              <>
+                <h1 style={{ fontSize: "25px", fontWeight: "900" }}>
+                  {user?.name ?? (authLoading || loadingUser ? "Carregando perfil..." : "Meu perfil")}
+                </h1>
+                {user?.dateRegistration && (
+                  <span>
+                    <Star size={14} />
+                    Cliente desde {formatRegistrationDate(user.dateRegistration)}
+                  </span>
+                )}
+              </>
+            )}
           </div>
         </section>
 
-        {showAddressScreen ? (
+        {isAuthenticated && loadingUser && <p className={styles.profileFeedback} role="status">Carregando seus dados...</p>}
+        {isAuthenticated && userError && <p className={`${styles.profileFeedback} ${styles.profileError}`} role="alert">{userError}</p>}
+        {isAuthenticated && profileSuccess && <p className={styles.profileFeedback} role="status">{profileSuccess}</p>}
+
+        {showAddressScreen && isAuthenticated ? (
           <section className={styles.addressScreen}>
             <div className={styles.addressScreenHeader}>
               <button
@@ -717,6 +796,10 @@ export default function Profile() {
                     type="button"
                     onClick={() => {
                       if (item.title === "Endereços") {
+                        if (!isAuthenticated) {
+                          setAuthRequest("addresses");
+                          return;
+                        }
                         setShowAddressScreen(true);
                         return;
                       }
@@ -810,6 +893,7 @@ export default function Profile() {
                       activeOption === item.title ? styles.optionItemActive : ""
                     }`}
                     type="button"
+                    disabled={item.title === "Editar perfil" && (authLoading || (isAuthenticated && !user))}
                     onClick={() => handleOptionClick(item.title, item.onClick)}
                   >
                     <Icon className={styles.optionIcon} size={26} />
@@ -825,6 +909,30 @@ export default function Profile() {
           </>
         )}
       </main>
+
+      {authRequest && (
+        <AuthRequiredModal
+          description={authRequest === "addresses" ? "Entre ou crie uma conta para cadastrar e acessar seus endereços." : undefined}
+          onClose={() => setAuthRequest(null)}
+        />
+      )}
+
+      {showEditProfile && user && isAuthenticated && (
+        <EditProfileModal
+          user={user}
+          onClose={() => setShowEditProfile(false)}
+          onAuthRequired={() => {
+            setShowEditProfile(false);
+            contextLogout();
+            setAuthRequest("profile");
+          }}
+          onUpdated={(updatedUser) => {
+            setUser(updatedUser);
+            setShowEditProfile(false);
+            setProfileSuccess("Perfil atualizado com sucesso.");
+          }}
+        />
+      )}
 
       {showLogoutModal && (
         <ConfirmationModal

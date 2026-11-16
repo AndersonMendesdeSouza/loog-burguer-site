@@ -1,4 +1,4 @@
-import { Plus } from "lucide-react";
+import { ShoppingCart } from "lucide-react";
 import type { CSSProperties } from "react";
 import styles from "./FoodCard.module.css";
 import { toast } from "react-toastify";
@@ -75,34 +75,44 @@ export function FoodCard({
 
       <div className={styles.imgWrap}>
         <img src={img} alt={name} className={styles.img} />
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            addCart(item);
-            toast.success("Produto adicionado ao carrinho", { autoClose: 1500 });
-            functions?.();
-          }}
-          className={styles.addBtn}
-          aria-label="Adicionar ao carrinho"
-        >
-          <Plus size={22} />
-        </button>
       </div>
 
       <div className={styles.body}>
-        <h3 className={styles.title}>{name}</h3>
+        <h3 className={styles.title}>
+          <button
+            type="button"
+            className={styles.detailsButton}
+            onClick={(event) => {
+              event.stopPropagation();
+              onDetails?.();
+            }}
+            aria-label={`Ver detalhes de ${name}`}
+          >
+            {name}
+          </button>
+        </h3>
         <p className={styles.desc}>{desc}</p>
 
         <div className={styles.bottom}>
-          <div style={{ display: "flex", flexDirection: "column" }}>
+          <div className={styles.prices}>
             {oldPrice !== undefined && (
               <span className={styles.minPrice}>{formatMoney(oldPrice)}</span>
             )}
             <span className={styles.price}>{formatMoney(price)}</span>
           </div>
-          <button type="button" className={styles.button} onClick={onDetails}>
-            Ver detalhes
+          <button
+            type="button"
+            className={styles.addBtn}
+            onClick={(event) => {
+              event.stopPropagation();
+              addCart(item);
+              toast.success("Produto adicionado ao carrinho", { autoClose: 1500 });
+              functions?.();
+            }}
+            aria-label={`Adicionar ${name} ao carrinho`}
+          >
+            <ShoppingCart size={18} aria-hidden="true" />
+            Adicionar
           </button>
         </div>
       </div>

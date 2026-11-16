@@ -226,7 +226,7 @@ export default function Orders() {
   return (
     <div className={styles.screen}>
 
-      <main className={styles.content}>
+      <main className={styles.content} data-enter="page">
         <h1 className={styles.title}>Pedidos</h1>
 
         <div className={styles.tabs} role="group" aria-label="Filtrar pedidos">

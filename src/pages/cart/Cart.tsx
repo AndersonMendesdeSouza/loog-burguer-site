@@ -161,7 +161,7 @@ export default function Cart() {
           } as CartCssVars
         }
       >
-        <div className={styles.content}>
+        <div className={styles.content} data-enter="page">
           <header className={styles.header}>
             <button
               className={styles.iconBtn}

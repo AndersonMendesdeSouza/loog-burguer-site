@@ -1,5 +1,16 @@
+@font-face {
+  font-family: 'Yellowtail';
+  src: url('./assets/fonts/Yellowtail-Regular.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
 :root {
   --font-primary: 'Poppins', sans-serif;
+  --toastify-color-light: var(--bg-secondary);
+  --toastify-text-color-light: var(--text-primary);
+  color-scheme: dark;
 }
 
 * {
@@ -8,9 +19,56 @@
   scroll-behavior: smooth;
 }
 
-html, body {
+html,
+body,
+#root {
+  width: 100%;
+  min-height: 100%;
   margin: 0;
   padding: 0;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+body {
+  min-height: 100dvh;
   font-family: var(--font-primary);
-  background: #000; /* opcional */
+}
+
+#root {
+  min-height: 100dvh;
+}
+
+/* O Safari no iPhone amplia campos com fontes menores que 16px ao focar. */
+@supports (-webkit-touch-callout: none) {
+  input:not([type]),
+  input[type="text"],
+  input[type="search"],
+  input[type="email"],
+  input[type="password"],
+  input[type="tel"],
+  input[type="url"],
+  input[type="number"],
+  textarea,
+  select {
+    /* Prevalece sobre as fontes menores dos CSS Modules. */
+    font-size: 16px !important;
+  }
+}
+
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.99);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  [data-enter="page"] {
+    animation: page-enter 280ms ease-out;
+  }
 }

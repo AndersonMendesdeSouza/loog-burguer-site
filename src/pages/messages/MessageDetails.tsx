@@ -52,7 +52,7 @@ export default function MessageDetails() {
 
   return (
     <div className={styles.screen}>
-      <main className={`${styles.content} ${styles.detailContent}`}>
+      <main className={`${styles.content} ${styles.detailContent}`} data-enter="page">
         <section className={styles.detailShell} aria-label={title}>
           <header className={styles.detailTop}>
             <button

@@ -1,16 +1,21 @@
 const Colors = {
   Background: {
-    primary: "#1A1A1A",
-    secondary: "#121212ff",
+    primary: "#160b07",
+    secondary: "#21120d",
+    muted: "#1b0f0b",
+  },
+
+  Borders: {
+    primary: "rgba(183, 123, 91, 0.22)",
   },
 
   Highlight: {
-    primary: "#FFD700",
+    primary: "#ffd000",
   },
 
   Texts: {
-    primary: "#FFFFFF",
-    secondary: "#CCCCCC",
+    primary: "#fffaf5",
+    secondary: "#c9bfb9",
   },
 
   Status: {

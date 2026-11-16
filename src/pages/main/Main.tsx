@@ -1,15 +1,20 @@
-import type { CSSProperties } from "react";
 import { useMemo, useState, useEffect, useRef } from "react";
-import Colors from "../../themes/Colors";
 import styles from "./Main.module.css";
 import { FoodCard } from "../../components/food/FoodCard";
 import {
   PlusCircle,
+  LayoutGrid,
   CupSoda,
   IceCream,
   ShoppingCart,
   HamburgerIcon,
   Star,
+  ArrowDown,
+  ArrowRight,
+  Flame,
+  Bike,
+  ShieldCheck,
+  Crown,
   type LucideIcon,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -19,14 +24,6 @@ import type { FoodResponseDto } from "../../dtos/Food-Response.Dto";
 import { toast, ToastContainer } from "react-toastify";
 import { useStoreStatus } from "../../hooks/useStoreStatus";
 import { ProductService } from "../../service/product.service";
-
-type MainCssVars = CSSProperties & {
-  "--bg-primary": string;
-  "--bg-secondary": string;
-  "--text-primary": string;
-  "--text-secondary": string;
-  "--highlight": string;
-};
 
 const categoryIcons: Record<string, LucideIcon> = {
   Sanduíches: HamburgerIcon,
@@ -43,6 +40,7 @@ export default function Main() {
   const [productsError, setProductsError] = useState("");
   const [search, setSearch] = useState("");
   const searchRef = useRef<HTMLInputElement | null>(null);
+  const menuRef = useRef<HTMLDivElement | null>(null);
   const [cartActived, setCartActivedCart] = useState(false);
   const storeStatus = useStoreStatus();
   const openNow = storeStatus.openNow;
@@ -142,18 +140,7 @@ export default function Main() {
   };
 
   return (
-    <div
-      className={styles.screen}
-      style={
-        {
-          "--bg-primary": Colors.Background.primary,
-          "--bg-secondary": Colors.Background.secondary,
-          "--text-primary": Colors.Texts.primary,
-          "--text-secondary": Colors.Texts.secondary,
-          "--highlight": Colors.Highlight.primary,
-        } as MainCssVars
-      }
-    >
+    <div className={styles.screen}>
       <div className={styles.page}>
         <ToastContainer position="top-right" />
         {cartActived && (
@@ -162,6 +149,7 @@ export default function Main() {
               className={styles.headerCartActived}
               type="button"
               onClick={() => navigation("/cart")}
+              aria-label="Abrir carrinho"
             >
               <ShoppingCart size={20} />
             </button>
@@ -169,6 +157,7 @@ export default function Main() {
         )}
 
         <Header
+          storeOpen={storeStatus.loading ? undefined : openNow}
           search={search}
           searchRef={searchRef}
           onCartClick={() => navigation("/cart")}
@@ -180,79 +169,85 @@ export default function Main() {
         />
 
         {loading ? (
-          <div
-            style={
-              {
-                "--bg-primary": Colors.Background.primary,
-                "--bg-secondary": Colors.Background.secondary,
-                "--text-primary": Colors.Texts.primary,
-                "--text-secondary": Colors.Texts.secondary,
-                "--highlight": Colors.Highlight.primary,
-              } as MainCssVars
-            }
-          >
-            <MainSkeleton />
-          </div>
+          <MainSkeleton />
         ) : (
-          <div className={styles.containerSec}>
+          <div className={styles.containerSec} data-enter="page">
             <section className={styles.hero}>
-              <div className={styles.heroOverlay} />
+              <div className={styles.heroOverlay} aria-hidden="true" />
               <div className={styles.heroCenter}>
                 <div className={styles.heroContent}>
                   <div className={styles.heroBadges}>
-                    <span
-                      className={styles.openBadge}
-                      style={
-                        openNow
-                          ? undefined
-                          : {
-                            background: "rgba(255, 0, 0, 0.22)",
-                            border: "1px solid rgba(255, 0, 0, 0.85)",
-                            color: "rgba(255, 140, 140, 0.95)",
-                          }
-                      }
-                    >
+                    <span className={`${styles.openBadge} ${!openNow ? styles.closedBadge : ""}`}>
+                      <span className={styles.statusDot} aria-hidden="true" />
                       {openNow ? "ABERTO AGORA" : "FECHADO"}
                     </span>
 
                     <span className={styles.ratingBadge}>
-                      4.8 <Star size={14} />
+                      <Star size={14} /> 4.8
                     </span>
                     {!openNow && (
-                      <span
-                        className={styles.openBadgeHors}
-                        style={
-                          openNow
-                            ? undefined
-                            : {
-                              color: "rgba(255, 255, 255, 0.78)",
-                            }
-                        }
-                      >
+                      <span className={styles.openBadgeHors}>
                         Abrimos em {left} {left === 1 ? "hora" : "horas"}
                       </span>
                     )}
                   </div>
-                  <div>
-                    <h1 className={styles.heroTitle}>O Verdadeiro</h1>
-                    <h2 className={styles.heroAccent}>Sabor Artesanal</h2>
-                  </div>
+                  <p className={styles.heroEyebrow}><span>Bem-vindo à Burguer</span></p>
+                  <h1 className={styles.heroTitle}>
+                    <span className={styles.heroTitleFirst}>Hambúrguer</span>{" "}
+                    <span className={styles.heroTitleSecond}>
+                      Artesanal<span className={styles.heroDesktopWord}> de</span>
+                      <Crown className={styles.heroCrown} aria-hidden="true" />
+                    </span>{" "}
+                    <span className={styles.heroAccent}>
+                      <span className={styles.heroMobileWord}>de </span>Verdade!
+                    </span>
+                  </h1>
                   <p className={styles.heroDesc}>
-                    Ingredientes selecionados, carnes nobres e aquele molho
-                    especial que você só encontra aqui.
+                    <span className={styles.heroDesktopDescription}>
+                      Ingredientes selecionados, sabor incomparável e aquele
+                      combo perfeito para matar a sua fome.
+                    </span>
+                    <span className={styles.heroMobileDescription}>
+                      Sabor irresistível em cada <strong>mordida.</strong>
+                    </span>
                   </p>
+                  <div className={styles.heroArtworkSpace} aria-hidden="true" />
+                  <button
+                    type="button"
+                    className={styles.menuButton}
+                    onClick={() => menuRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
+                  >
+                    <ShoppingCart size={17} />
+                    Ver Cardápio
+                    <ArrowRight size={16} />
+                  </button>
                 </div>
               </div>
             </section>
 
-            <div className={styles.categoryRow}>
+            <ul className={styles.heroBenefits} aria-label="Diferenciais da Burguer">
+              <li><HamburgerIcon aria-hidden="true" /><span>Ingredientes<br />Selecionados</span></li>
+              <li><Flame aria-hidden="true" /><span>Sabor<br />Artesanal</span></li>
+              <li><Bike aria-hidden="true" /><span>Entrega<br />Rápida</span></li>
+              <li><ShieldCheck aria-hidden="true" /><span>Qualidade<br />Garantida</span></li>
+            </ul>
+
+            <div className={styles.menuHeading}>
+              <div>
+                <h2><Flame size={29} /> Nosso cardápio</h2>
+              </div>
+              <span className={styles.menuHint}>Escolha seu favorito <ArrowDown size={16} /></span>
+            </div>
+            <div className={styles.categoryRow} ref={menuRef} role="group" aria-label="Categorias do cardápio">
               <button
                 type="button"
                 onClick={() => setCategory(null)}
+                aria-pressed={category === null}
                 className={`${styles.categoryPill} ${category === null ? styles.categoryActive : ""
                   }`}
               >
-                Todos
+                <LayoutGrid size={32} aria-hidden="true" />
+                <span>Todos</span>
               </button>
 
               {categories.map((item) => {
@@ -262,15 +257,18 @@ export default function Main() {
                     key={item.name}
                     type="button"
                     onClick={() => setCategory(item.name)}
+                    aria-pressed={category === item.name}
                     className={`${styles.categoryPill} ${category === item.name ? styles.categoryActive : ""
                       }`}
                   >
-                    <Icon size={18} />
+                    <Icon size={32} aria-hidden="true" />
                     <span>{item.name}</span>
                   </button>
                 );
               })}
             </div>
+
+
 
             {productsError ? (
               <div className={styles.emptyState}>

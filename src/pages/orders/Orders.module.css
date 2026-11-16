@@ -1,6 +1,8 @@
 .screen {
   min-height: 100%;
-  color: #fff;
+  width: 100%;
+  background: var(--bg-primary);
+  color: var(--text-primary);
 }
 
 .content {
@@ -22,7 +24,7 @@
   gap: 20px;
   overflow-x: auto;
   margin-bottom: 24px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .tabs button {
@@ -32,7 +34,7 @@
   border: 0;
   border-bottom: 2px solid transparent;
   background: transparent;
-  color: rgba(255, 255, 255, 0.67);
+  color: var(--text-secondary);
   font-size: 13px;
   font-weight: 500;
   line-height: 1.4;
@@ -42,7 +44,7 @@
 }
 
 .tabs button:hover {
-  color: #fff;
+  color: var(--text-primary);
 }
 
 .tabs button:focus-visible,
@@ -64,9 +66,9 @@
 
 .currentOrder {
   padding: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.07);
+  border: 1px solid var(--border-color);
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--bg-secondary);
 }
 
 .orderTop {
@@ -130,7 +132,7 @@
   left: 12%;
   right: 12%;
   height: 2px;
-  background: rgba(255, 255, 255, 0.18);
+  background: var(--border-color);
 }
 
 .timeline::after {
@@ -185,8 +187,8 @@
 }
 
 .stepMuted span {
-  background: #2a2a2a;
-  color: rgba(255, 255, 255, 0.72);
+  background: var(--surface-muted);
+  color: var(--text-secondary);
 }
 
 .stepDone strong {
@@ -194,7 +196,7 @@
 }
 
 .stepMuted strong {
-  color: rgba(255, 255, 255, 0.58);
+  color: var(--text-secondary);
 }
 
 .stepDone strong,
@@ -220,14 +222,17 @@
   align-items: center;
   gap: 14px;
   padding: 12px 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .orderItem img {
   width: 56px;
   height: 56px;
   border-radius: 6px;
-  object-fit: cover;
+  object-fit: contain;
+  object-position: center;
+  padding: 3px;
+  background: var(--surface-muted);
 }
 
 .orderItem strong {
@@ -241,7 +246,7 @@
 
 .orderItem p {
   margin: 0;
-  color: rgba(255, 255, 255, 0.62);
+  color: var(--text-secondary);
   font-size: 12px;
   line-height: 1.5;
   overflow-wrap: anywhere;
@@ -249,7 +254,7 @@
 
 .orderItem > span {
   align-self: center;
-  color: rgba(255, 255, 255, 0.67);
+  color: var(--text-secondary);
   font-size: 13px;
   font-weight: 500;
   white-space: nowrap;
@@ -293,9 +298,9 @@
 
 .detailsButton {
   margin-top: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border-color);
   background: transparent;
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--text-primary);
 }
 
 .emptyState {
@@ -303,7 +308,7 @@
   min-height: 120px;
   place-items: center;
   padding: 24px 16px;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--text-secondary);
   font-size: 14px;
   font-weight: 400;
   line-height: 1.5;

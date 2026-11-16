@@ -253,7 +253,7 @@ export default function FoodDetails() {
         </div>
       )}
 
-      <div className={styles.top}>
+      <div className={styles.top} data-enter="page">
         <div className={styles.media}>
           <img
             className={styles.mediaImg}

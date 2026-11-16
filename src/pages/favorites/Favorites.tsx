@@ -73,7 +73,7 @@ export default function Favorites() {
 
   return (
     <div className={styles.screen}>
-      <main className={styles.content}>
+      <main className={styles.content} data-enter="page">
         <h1 className={styles.title}>Favoritos</h1>
 
         <div className={styles.searchInputWrap}>

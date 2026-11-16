@@ -1,6 +1,8 @@
 .screen {
   min-height: 100%;
-  color: #fff;
+  width: 100%;
+  background: var(--bg-primary);
+  color: var(--text-primary);
 }
 
 .content {
@@ -23,12 +25,10 @@
   width: 100%;
   min-height: 52px;
   padding: 0 16px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border-color);
   border-radius: 22px;
-  background:
-    radial-gradient(420px 120px at 50% 0%, rgba(255, 255, 255, 0.08), transparent 70%),
-    rgba(255, 255, 255, 0.05);
-  color: rgba(255, 255, 255, 0.58);
+  background: var(--surface-muted);
+  color: var(--text-secondary);
 }
 
 .searchInputWrap input {
@@ -37,12 +37,12 @@
   border: 0;
   outline: 0;
   background: transparent;
-  color: #fff;
+  color: var(--text-primary);
   font-size: 16px;
 }
 
 .searchInputWrap input::placeholder {
-  color: rgba(255, 255, 255, 0.45);
+  color: var(--text-secondary);
 }
 
 .filters {
@@ -67,9 +67,9 @@
 }
 
 .filterButton {
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(255, 255, 255, 0.04);
-  color: rgba(255, 255, 255, 0.62);
+  border: 1px solid var(--border-color);
+  background: var(--surface-muted);
+  color: var(--text-secondary);
 }
 
 .activeFilter {
@@ -87,11 +87,9 @@
 
 .favoriteCard {
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border-color);
   border-radius: 15px;
-  background:
-    radial-gradient(260px 150px at 50% 0%, rgba(255, 255, 255, 0.07), transparent 70%),
-    rgba(255, 255, 255, 0.035);
+  background: var(--bg-secondary);
 }
 
 .imageWrap {
@@ -103,7 +101,10 @@
 .imageWrap img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
+  object-position: center;
+  padding: 4px;
+  background: var(--surface-muted);
 }
 
 .imageWrap button {
@@ -114,9 +115,9 @@
   width: 40px;
   height: 40px;
   place-items: center;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid var(--border-color);
   border-radius: 50%;
-  background: rgba(0, 0, 0, 0.52);
+  background: var(--surface-muted);
   color: #ff2b2b;
   cursor: pointer;
 }
@@ -134,7 +135,7 @@
 .cardBody p {
   min-height: 64px;
   margin: 0 0 12px;
-  color: rgba(255, 255, 255, 0.64);
+  color: var(--text-secondary);
   font-size: 15px;
   line-height: 1.35;
 }
@@ -156,7 +157,7 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  color: rgba(255, 255, 255, 0.64);
+  color: var(--text-secondary);
   font-size: 14px;
 }
 
@@ -172,7 +173,7 @@
   place-items: center;
   border: 0;
   border-radius: 11px;
-  background: #ffd400;
+  background: var(--highlight);
   color: #111;
   cursor: pointer;
 }
@@ -192,17 +193,18 @@
   overflow: hidden;
   align-items: center;
   gap: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border-color);
   border-radius: 14px;
-  background:
-    radial-gradient(280px 140px at 50% 0%, rgba(255, 255, 255, 0.07), transparent 70%),
-    rgba(255, 255, 255, 0.035);
+  background: var(--bg-secondary);
 }
 
 .suggestionCard img {
   width: 150px;
   height: 120px;
-  object-fit: cover;
+  object-fit: contain;
+  object-position: center;
+  padding: 4px;
+  background: var(--surface-muted);
 }
 
 .suggestionCard h3 {
@@ -212,7 +214,7 @@
 
 .suggestionCard p {
   margin: 0 0 8px;
-  color: rgba(255, 255, 255, 0.64);
+  color: var(--text-secondary);
   line-height: 1.3;
 }
 
@@ -220,7 +222,7 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  color: rgba(255, 255, 255, 0.66);
+  color: var(--text-secondary);
 }
 
 .suggestionCard span strong,
@@ -230,8 +232,8 @@
 
 .suggestionCard > button {
   margin-right: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-color);
+  background: var(--surface-muted);
   color: #ffd400;
 }
 

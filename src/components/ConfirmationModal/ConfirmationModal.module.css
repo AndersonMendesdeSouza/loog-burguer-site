@@ -1,11 +1,11 @@
 .modalOverlay {
   position: fixed;
   inset: 0;
-  z-index: 40;
+  z-index: 1000;
   display: grid;
   place-items: center;
   padding: 18px;
-  background: rgba(0, 0, 0, 0.62);
+  background: rgba(22, 11, 7, 0.72);
   backdrop-filter: blur(5px);
   animation: overlayIn 160ms ease;
 }
@@ -17,15 +17,9 @@
   flex-direction: column;
   gap: 12px;
   padding: 24px 20px 20px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid var(--border-color);
   border-radius: 14px;
-  background:
-    radial-gradient(
-      260px 140px at 50% 0%,
-      rgba(255, 212, 0, 0.13),
-      transparent 72%
-    ),
-    #171717;
+  background: var(--bg-secondary);
   box-shadow: 0 24px 70px rgba(0, 0, 0, 0.48);
   text-align: center;
   animation: modalIn 180ms ease;
@@ -43,7 +37,7 @@
 
 .modal h2 {
   margin: 2px 0 0;
-  color: #fff;
+  color: var(--text-primary);
   font-size: 22px;
   font-weight: 900;
   line-height: 1.1;
@@ -52,7 +46,7 @@
 .modal p {
   max-width: 270px;
   margin: 0;
-  color: rgba(255, 255, 255, 0.66);
+  color: var(--text-secondary);
   font-size: 14px;
   font-weight: 600;
   line-height: 1.4;
@@ -88,9 +82,9 @@
 }
 
 .modalCancel {
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(255, 255, 255, 0.06);
-  color: #fff;
+  border: 1px solid var(--border-color);
+  background: var(--surface-muted);
+  color: var(--text-primary);
 }
 
 .modalConfirm {
@@ -100,7 +94,7 @@
 }
 
 .modalCancel:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--bg-primary);
 }
 
 .modalConfirm:hover:not(:disabled) {

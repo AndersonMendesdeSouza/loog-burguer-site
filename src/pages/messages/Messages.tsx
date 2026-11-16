@@ -19,7 +19,7 @@ export default function Messages() {
 
   return (
     <div className={styles.screen}>
-      <main className={styles.content}>
+      <main className={styles.content} data-enter="page">
         <header className={styles.pageHeader}>
           <button
             className={styles.pageBackButton}

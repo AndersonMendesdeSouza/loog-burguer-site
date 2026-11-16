@@ -1,9 +1,7 @@
-import { useEffect, useState, type CSSProperties, type RefObject } from "react";
-import { Search, ShoppingCart, X } from "lucide-react";
-// import { MessageCircle } from "lucide-react";
+import { useEffect, useLayoutEffect, useRef, useState, type RefObject } from "react";
+import { Hamburger, Search, ShoppingCart, UserRound, X } from "lucide-react";
 import styles from "./Header.module.css";
-import { useNavigate } from "react-router-dom";
-// import { useLocation } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
   CART_STORAGE_KEY,
   CART_UPDATED_EVENT,
@@ -17,216 +15,52 @@ type HeaderProps = {
   cartCount?: number;
   searchPlaceholder?: string;
   showSearch?: boolean;
+  storeOpen?: boolean;
   onCartClick: () => void;
   onSearchChange?: (value: string) => void;
   onClearSearch?: () => void;
 };
 
-const headerStyle: CSSProperties = {
-  width: "100%",
-  padding: "14px 14px 12px",
-  borderBottom: "1px solid rgba(255, 255, 255, 0.08)",
-};
-
-const headerContentStyle: CSSProperties = {
-  display: "grid",
-  gridTemplateColumns: "minmax(0, 1fr) 96px",
-  gridTemplateAreas: '"brand actions" "auth auth"',
-  alignItems: "center",
-  gap: "10px 8px",
-  width: "100%",
-  marginBottom: 10,
-};
-
-const desktopHeaderContentStyle: CSSProperties = {
-  ...headerContentStyle,
-  gridTemplateColumns: "minmax(0, 1fr) auto 96px",
-  gridTemplateAreas: '"brand auth actions"',
-};
-
-const brandStyle: CSSProperties = {
-  gridArea: "brand",
-  display: "flex",
-  minWidth: 0,
-  alignItems: "center",
-  gap: 10,
-};
-
-const brandLogoStyle: CSSProperties = {
-  width: 38,
-  height: 38,
-  flex: "0 0 38px",
-  borderRadius: "50%",
-  border: "2px solid #ffd400",
-  objectFit: "cover",
-  display: "block",
-};
-
-const brandNameStyle: CSSProperties = {
-  minWidth: 0,
-  whiteSpace: "nowrap",
-  color: "#fff",
-  fontSize: 18,
-  fontWeight: 800,
-  lineHeight: 1.1,
-};
-
-const authActionsStyle: CSSProperties = {
-  gridArea: "auth",
-  display: "grid",
-  gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-  width: "100%",
-  gap: 8,
-};
-
-const desktopAuthActionsStyle: CSSProperties = {
-  ...authActionsStyle,
-  width: 224,
-};
-
-const authButtonStyle: CSSProperties = {
-  width: "100%",
-  minWidth: 0,
-  height: 36,
-  padding: "0 10px",
-  border: "1px solid rgba(255, 255, 255, 0.16)",
-  borderRadius: 8,
-  background: "#f4f4f4",
-  color: "#111",
-  fontSize: 13,
-  fontWeight: 700,
-  lineHeight: 1,
-  whiteSpace: "nowrap",
-  cursor: "pointer",
-};
-
-const authPrimaryStyle: CSSProperties = {
-  ...authButtonStyle,
-  borderColor: "#ffd400",
-  background: "#ffd400",
-};
-
-const headerActionsStyle: CSSProperties = {
-  gridArea: "actions",
-  justifySelf: "end",
-  display: "flex",
-  alignItems: "center",
-  gap: 8,
-};
-
-const headerIconButtonStyle: CSSProperties = {
-  justifySelf: "end",
-  position: "relative",
-  display: "grid",
-  width: 44,
-  height: 44,
-  placeItems: "center",
-  border: "1px solid rgba(255, 255, 255, 0.12)",
-  borderRadius: 16,
-  background: "rgba(255, 255, 255, 0.05)",
-  color: "rgba(255, 255, 255, 0.9)",
-  cursor: "pointer",
-};
-
-// const messageButtonStyle: CSSProperties = {
-//   ...headerIconButtonStyle,
-//   borderColor: "rgba(255, 212, 0, 0.32)",
-//   background: "rgba(255, 212, 0, 0.08)",
-//   color: "#ffd400",
-// };
-
-const cartButtonStyle: CSSProperties = {
-  ...headerIconButtonStyle,
-};
-
-const cartBadgeStyle: CSSProperties = {
-  position: "absolute",
-  top: -8,
-  right: -7,
-  display: "grid",
-  minWidth: 19,
-  height: 19,
-  placeItems: "center",
-  padding: "0 6px",
-  borderRadius: 999,
-  background: "#ffd400",
-  color: "#111",
-  fontSize: 11,
-  fontWeight: 900,
-  lineHeight: 1,
-};
-
-const searchWrapStyle: CSSProperties = {
-  display: "flex",
-  width: "100%",
-  minHeight: 48,
-  alignItems: "center",
-  gap: 10,
-  padding: "10px 14px",
-  border: "1px solid rgba(255, 255, 255, 0.09)",
-  borderRadius: 18,
-  background: "rgba(255, 255, 255, 0.05)",
-  color: "rgba(255, 255, 255, 0.72)",
-};
-
-const searchInputStyle: CSSProperties = {
-  width: "100%",
-  minWidth: 0,
-  border: 0,
-  outline: 0,
-  background: "transparent",
-  color: "#fff",
-  fontSize: 14,
-};
-
-const searchClearStyle: CSSProperties = {
-  display: "inline-flex",
-  width: 24,
-  height: 24,
-  flex: "0 0 24px",
-  alignItems: "center",
-  justifyContent: "center",
-  border: 0,
-  background: "transparent",
-  color: "rgba(255, 255, 255, 0.72)",
-  cursor: "pointer",
-};
-
-function useDesktopHeader() {
-  const [isDesktop, setIsDesktop] = useState(() => {
-    if (typeof window === "undefined") return false;
-    return window.matchMedia("(min-width: 641px)").matches;
-  });
-
-  useEffect(() => {
-    const query = window.matchMedia("(min-width: 641px)");
-    const update = () => setIsDesktop(query.matches);
-
-    update();
-    query.addEventListener("change", update);
-    return () => query.removeEventListener("change", update);
-  }, []);
-
-  return isDesktop;
-}
-
 export function Header({
   search = "",
   searchRef,
   cartCount,
-  searchPlaceholder = "Buscar itens...",
+  searchPlaceholder = "Buscar no cardápio...",
   showSearch = true,
+  storeOpen,
   onCartClick,
   onSearchChange,
   onClearSearch,
 }: HeaderProps) {
-  const isDesktopHeader = useDesktopHeader();
   const navigate = useNavigate();
-  // const location = useLocation();
+  const location = useLocation();
   const { isAuthenticated, loading: authLoading } = useAuth();
   const [storedCartCount, setStoredCartCount] = useState(getCartQuantity);
   const badgeCount = cartCount ?? storedCartCount;
   const showAuthActions = !authLoading && !isAuthenticated;
+  const headerRef = useRef<HTMLElement | null>(null);
+  const [headerHeight, setHeaderHeight] = useState(70);
+
+  useLayoutEffect(() => {
+    const header = headerRef.current;
+    if (!header) return;
+
+    function updateHeaderHeight() {
+      if (!header) return;
+      const height = Math.ceil(header.getBoundingClientRect().height);
+      setHeaderHeight(height);
+      document.documentElement.style.setProperty("--site-header-height", `${height}px`);
+    }
+
+    updateHeaderHeight();
+    const observer = new ResizeObserver(updateHeaderHeight);
+    observer.observe(header);
+
+    return () => {
+      observer.disconnect();
+      document.documentElement.style.removeProperty("--site-header-height");
+    };
+  }, []);
 
   useEffect(() => {
     const updateCartCount = () => setStoredCartCount(getCartQuantity());
@@ -247,107 +81,115 @@ export function Header({
   }, []);
 
   return (
-    <header className={styles.header} style={headerStyle}>
-      <div
-        className={styles.headerContent}
-        style={isDesktopHeader ? desktopHeaderContentStyle : headerContentStyle}
-      >
-        <div className={styles.brand} style={brandStyle}>
-          <img
-            className={styles.brandLogo}
-            style={brandLogoStyle}
-            src="/hamburguer.png"
-            alt="Logo Burguer"
-          />
-          <span className={styles.brandName} style={brandNameStyle}>
-            Burguer
-          </span>
-        </div>
-
-        {showAuthActions && (
-          <div
-            className={styles.authActions}
-            style={isDesktopHeader ? desktopAuthActionsStyle : authActionsStyle}
-          >
-            <button
-              type="button"
-              className={`${styles.authButton} ${styles.authPrimary}`}
-              style={authPrimaryStyle}
-              onClick={() => navigate("/login")}
-            >
-              Entrar
-            </button>
-            <button
-              type="button"
-              className={styles.authButton}
-              style={authButtonStyle}
-              onClick={() => navigate("/register")}
-            >
-              Criar conta
-            </button>
-          </div>
-        )}
-
-        <div className={styles.headerActions} style={headerActionsStyle}>
-          {/* <button
-            className={styles.messageButton}
-            style={messageButtonStyle}
-            type="button"
-            onClick={() =>
-              navigate("/mensagens", {
-                state: { returnTo: `${location.pathname}${location.search}` },
-              })
-            }
-            aria-label="Abrir mensagens"
-          >
-            <MessageCircle size={22} />
-          </button> */}
-
-          <button
-            className={styles.cartButton}
-            style={cartButtonStyle}
-            type="button"
-            onClick={onCartClick}
-            aria-label="Abrir carrinho"
-          >
-            <ShoppingCart size={22} />
-            {badgeCount > 0 && (
-              <span className={styles.cartBadge} style={cartBadgeStyle}>
-                {badgeCount}
+    <>
+      <div className={styles.headerSpacer} style={{ height: headerHeight }} aria-hidden="true" />
+      <header ref={headerRef} className={styles.header}>
+        <div
+          className={`${styles.headerContent} ${!showSearch ? styles.withoutSearch : ""} ${showAuthActions ? styles.withAuth : ""}`}
+          data-enter="page"
+        >
+          <div className={styles.brand}>
+            <Hamburger className={styles.brandLogo} aria-hidden="true" />
+            <div className={styles.brandText}>
+              <span className={styles.brandName}>Burguer</span>
+              <span className={styles.brandSubtitle}>Hamburgueria</span>
+            </div>
+            {storeOpen !== undefined && (
+              <span className={`${styles.storeStatus} ${!storeOpen ? styles.storeClosed : ""}`} role="status">
+                <span className={styles.storeStatusDot} aria-hidden="true" />
+                {storeOpen ? "ABERTO AGORA" : "FECHADO"}
               </span>
             )}
-          </button>
-        </div>
-      </div>
+          </div>
 
-      {showSearch && (
-        <div className={styles.searchInputWrap} style={searchWrapStyle}>
-          <Search size={18} />
-          <input
-            ref={searchRef}
-            className={styles.searchInput}
-            style={searchInputStyle}
-            value={search}
-            onChange={(event) => onSearchChange?.(event.target.value)}
-            placeholder={searchPlaceholder}
-            autoComplete="off"
-            autoCorrect="off"
-            autoCapitalize="off"
-            inputMode="search"
-          />
-          {search && (
-            <button
-              type="button"
-              className={styles.searchClear}
-              style={searchClearStyle}
-              onClick={onClearSearch}
-              aria-label="Limpar busca"
+          <nav className={styles.desktopNavigation} aria-label="Navegação principal">
+            <NavLink
+              to="/main"
+              className={({ isActive }) => isActive ? styles.navigationActive : styles.navigationLink}
             >
-              <X size={18} />
-            </button>
+              Início
+            </NavLink>
+            <NavLink
+              to="/pedidos"
+              className={({ isActive }) =>
+                isActive || location.pathname === "/order-inform"
+                  ? styles.navigationActive
+                  : styles.navigationLink
+              }
+            >
+              Pedidos
+            </NavLink>
+            <NavLink
+              to="/perfil"
+              className={({ isActive }) => isActive ? styles.navigationActive : styles.navigationLink}
+            >
+              Perfil
+            </NavLink>
+          </nav>
+
+          {showSearch && (
+            <div className={styles.searchInputWrap}>
+              <Search size={19} aria-hidden="true" />
+              <input
+                ref={searchRef}
+                className={styles.searchInput}
+                value={search}
+                onChange={(event) => onSearchChange?.(event.target.value)}
+                placeholder={searchPlaceholder}
+                aria-label="Buscar produtos no cardápio"
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="off"
+                inputMode="search"
+              />
+              {search && (
+                <button
+                  type="button"
+                  className={styles.searchClear}
+                  onClick={onClearSearch}
+                  aria-label="Limpar busca"
+                >
+                  <X size={18} />
+                </button>
+              )}
+            </div>
           )}
+
+          {showAuthActions && (
+            <div className={styles.authActions}>
+              <button
+                type="button"
+                className={styles.authButton}
+                onClick={() => navigate("/login")}
+              >
+                <UserRound size={20} aria-hidden="true" />
+                Entrar
+              </button>
+              <button
+                type="button"
+                className={`${styles.authButton} ${styles.authPrimary}`}
+                onClick={() => navigate("/register")}
+              >
+                Criar conta
+              </button>
+            </div>
+          )}
+
+          <div className={styles.headerActions}>
+            <button
+              className={styles.cartButton}
+              type="button"
+              onClick={onCartClick}
+              aria-label="Abrir carrinho"
+            >
+              <ShoppingCart size={24} />
+              {badgeCount > 0 && (
+                <span className={styles.cartBadge}>{badgeCount}</span>
+              )}
+            </button>
+          </div>
         </div>
-      )}
-    </header>
+      </header>
+    </>
   );
 }

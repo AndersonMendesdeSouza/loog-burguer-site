@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import type { LucideIcon } from "lucide-react";
 import {
+  ArrowLeft,
   Banknote,
   Bike,
   Check,
@@ -81,10 +82,18 @@ type DetailRow = {
 
 const statuses: Array<{ status: string; label: string; icon: LucideIcon }> = [
   { status: "RECEIVED", label: "Pedido enviado", icon: Check },
-  { status: "PREPARING", label: "Em preparacao", icon: CookingPot },
+  { status: "PREPARING", label: "Em preparo", icon: CookingPot },
   { status: "ON_ROUTE", label: "Saiu para entrega", icon: Bike },
   { status: "DELIVERED", label: "Entregue", icon: Home },
 ];
+
+const statusMessages: Record<string, string> = {
+  RECEIVED: "Recebemos seu pedido!",
+  PREPARING: "Seu pedido está sendo preparado!",
+  ON_ROUTE: "Seu pedido está a caminho!",
+  DELIVERED: "Seu pedido foi entregue!",
+  CANCELED: "Seu pedido foi cancelado.",
+};
 
 const progressClasses = [
   styles.progress0,
@@ -341,13 +350,13 @@ export default function OrderInform() {
     },
     {
       icon: Clock,
-      label: "Previsao de entrega",
+      label: "Previsão de entrega",
       value: "35-45 min",
       yellow: true,
     },
     {
       icon: Hash,
-      label: "Numero do pedido",
+      label: "Número do pedido",
       value: orderNumber,
       yellow: true,
       action: orderNumber !== "Nao informado" ? "Copiar numero" : undefined,
@@ -425,7 +434,10 @@ export default function OrderInform() {
 
   return (
     <main className={styles.page}>
-      <div className={styles.shell}>
+      <div className={styles.shell} data-enter="page">
+        <button type="button" className={styles.backButton} onClick={() => navigate("/pedidos")}>
+          <ArrowLeft size={16} /> Voltar
+        </button>
         <header className={styles.header}>
           <div className={styles.headerTitle}>
             <div
@@ -454,7 +466,7 @@ export default function OrderInform() {
                 className={styles.cancelButton}
               >
                 <XCircle />
-                {isCanceling ? "Cancelando..." : "Cancelar"}
+                {isCanceling ? "Cancelando..." : "Cancelar pedido"}
               </button>
             ) : null}
             <button
@@ -463,7 +475,7 @@ export default function OrderInform() {
               className={styles.homeButton}
             >
               <Home />
-              Inicio
+              Início
             </button>
           </div>
         </header>
@@ -514,7 +526,7 @@ export default function OrderInform() {
         </section>
 
         <div className={styles.grid}>
-          <section className={styles.card}>
+          <section className={cx(styles.card, styles.summaryCard)}>
             <div
               className={cx(styles.sectionTitle, styles.sectionTitleBetween)}
             >
@@ -572,7 +584,7 @@ export default function OrderInform() {
           </section>
 
           <div className={styles.sideGrid}>
-            <section className={styles.card}>
+            <section className={cx(styles.card, styles.deliveryCard)}>
               <div className={cx(styles.sectionTitle, styles.sectionTitleBetween)}>
                 <span className={styles.sectionTitleLabel}>
                   <MapPin />
@@ -634,61 +646,74 @@ export default function OrderInform() {
               })}
             </section>
 
-            <section className={styles.card}>
+            <section className={cx(styles.card, styles.timelineCard)}>
               <div className={styles.sectionTitle}>
                 <Clock />
                 Acompanhe seu pedido
               </div>
 
-              {orderStatuses.map((step, index) => {
-                const active = index === activeStatus;
-                const completed = index < activeStatus;
-                const done = completed || active;
-                const historyItem = order?.history?.find(
-                  (item) => item.status === step.status,
-                );
+              <div className={styles.timelineLayout}>
+                <div className={styles.timelineSteps}>
+                  {orderStatuses.map((step, index) => {
+                    const active = index === activeStatus;
+                    const completed = index < activeStatus;
+                    const done = completed || active;
+                    const historyItem = order?.history?.find(
+                      (item) => item.status === step.status,
+                    );
 
-                return (
-                  <div
-                    key={step.label}
-                    className={cx(
-                      styles.timelineItem,
-                      completed && styles.timelineItemCompleted,
-                      active && styles.timelineItemActive,
-                    )}
-                  >
-                    <div className={styles.timelineMarker}>
-                      {index < orderStatuses.length - 1 ? (
-                        <div
-                          className={cx(
-                            styles.timelineLine,
-                            index < activeStatus &&
-                              styles.timelineLineCompleted,
-                          )}
-                        />
-                      ) : null}
-                      <span className={styles.timelineDot} />
+                    return (
+                      <div
+                        key={step.label}
+                        className={cx(
+                          styles.timelineItem,
+                          completed && styles.timelineItemCompleted,
+                          active && styles.timelineItemActive,
+                        )}
+                      >
+                        <div className={styles.timelineMarker}>
+                          {index < orderStatuses.length - 1 ? (
+                            <div
+                              className={cx(
+                                styles.timelineLine,
+                                index < activeStatus &&
+                                  styles.timelineLineCompleted,
+                              )}
+                            />
+                          ) : null}
+                          <span className={styles.timelineDot} />
+                        </div>
+                        <span className={styles.timelineTime}>
+                          {done ? formatTime(historyItem?.createdAt) : "--:--"}
+                        </span>
+                        <span className={styles.timelineLabel}>
+                          {active ? historyItem?.label || step.label : step.label}
+                        </span>
+                        {active ? (
+                          <span className={styles.timelineBadge}>
+                            {order?.status === "PREPARING"
+                              ? "Em preparo"
+                              : order?.status === "ON_ROUTE"
+                                ? "Saiu para entrega"
+                                : order?.status === "DELIVERED"
+                                  ? "Entregue"
+                                  : "Aguardando confirmação"}
+                          </span>
+                        ) : null}
+                      </div>
+                    );
+                  })}
+                </div>
+                {order && (
+                  <aside className={cx(styles.statusFeedback, isCanceled && styles.statusFeedbackCanceled)}>
+                    {isCanceled ? <XCircle aria-hidden="true" /> : <CookingPot aria-hidden="true" />}
+                    <div>
+                      <strong>{statusMessages[order.status] || "Acompanhe seu pedido"}</strong>
+                      <p>{isCanceled ? "Consulte os detalhes acima." : "Agradecemos pela preferência!"}</p>
                     </div>
-                    <span className={styles.timelineTime}>
-                      {done ? formatTime(historyItem?.createdAt) : "--:--"}
-                    </span>
-                    <span className={styles.timelineLabel}>
-                      {active ? historyItem?.label || step.label : step.label}
-                    </span>
-                    {active ? (
-                      <span className={styles.timelineBadge}>
-                        {order?.status === "PREPARING"
-                          ? "Em preparacao"
-                          : order?.status === "ON_ROUTE"
-                            ? "Saiu para entrega"
-                            : order?.status === "DELIVERED"
-                              ? "Entregue"
-                              : "Aguardando confirmacao"}
-                      </span>
-                    ) : null}
-                  </div>
-                );
-              })}
+                  </aside>
+                )}
+              </div>
             </section>
           </div>
         </div>

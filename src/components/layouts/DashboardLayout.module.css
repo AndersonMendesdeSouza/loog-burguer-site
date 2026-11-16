@@ -1,6 +1,6 @@
 .container {
   min-height: 100dvh;
-  background-color: #181818;
+  background-color: var(--bg-primary);
 }
 
 .main {
@@ -9,11 +9,26 @@
 
 .content {
   width: 100%;
-  padding: 24px 24px 132px;
+  min-height: 100dvh;
+  padding: 0 0 132px;
 }
 
 @media (max-width: 640px) {
   .content {
-    padding: 14px 12px 120px;
+    padding: 0 0 120px;
+  }
+}
+
+.desktopHeader {
+  display: none;
+}
+
+@media (min-width: 901px) {
+  .desktopHeader {
+    display: block;
+  }
+
+  .content {
+    padding-bottom: 32px;
   }
 }
