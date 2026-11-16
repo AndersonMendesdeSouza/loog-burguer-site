@@ -30,7 +30,6 @@ export default function EditProfileModal({
 }: EditProfileModalProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
-  const nameRef = useRef<HTMLInputElement>(null);
   const savingRef = useRef(false);
   const id = useId();
   const [values, setValues] = useState<UpdateUserRequestDto>({
@@ -50,7 +49,7 @@ export default function EditProfileModal({
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     if (!dialog.open) dialog.showModal();
-    nameRef.current?.focus();
+    dialog.focus();
 
     return () => {
       dialog.close();
@@ -107,6 +106,7 @@ export default function EditProfileModal({
   return (
     <dialog
       ref={dialogRef}
+      tabIndex={-1}
       className={styles.dialog}
       aria-labelledby={`${id}-title`}
       aria-describedby={`${id}-description`}
@@ -138,7 +138,6 @@ export default function EditProfileModal({
           <label className={styles.field}>
             <span>Nome completo</span>
             <input
-              ref={nameRef}
               name="name"
               value={values.name}
               onChange={(event) => updateField("name", event.target.value)}
