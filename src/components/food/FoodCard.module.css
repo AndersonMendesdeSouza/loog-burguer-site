@@ -2,7 +2,7 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  width: 100%;
+  width: calc(100% + 10px);
   min-width: 0;
   height: 100%;
   border: 1px solid var(--border-color);
@@ -36,7 +36,7 @@
 
 .imgWrap {
   position: relative;
-  aspect-ratio: 1.8;
+  aspect-ratio: 1;
   flex: 0 0 auto;
   overflow: hidden;
   background: var(--surface-muted);
