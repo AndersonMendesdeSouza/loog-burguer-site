@@ -313,7 +313,7 @@ export default function FoodDetails() {
             </div>
           )}
 
-          {products.category !== "Sanduíches" && (
+          {products.category === "Bebidas" && (
             <div className={styles.section}>
               <div className={styles.sectionHead}>
                 <h2 className={styles.sectionTitle}>Como você prefere?</h2>
