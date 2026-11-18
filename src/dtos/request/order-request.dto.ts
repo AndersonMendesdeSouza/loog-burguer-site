@@ -5,7 +5,7 @@ import type { OrderDeliveryAddressRequestDto } from "./order-delivery-address-re
 export interface OrderRequestDto {
   tableId?: string;
   mesaId?: string | null;
-  paymentMethod: PaymentMethodEnum;
+  paymentMethod?: PaymentMethodEnum | null;
   customerName: string;
   customerPhone: string;
   addressId?: string;

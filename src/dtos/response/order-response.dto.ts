@@ -25,7 +25,7 @@ export interface OrderResponseDto {
   chat?: ChatResponseDto;
   code: number;
   status: string;
-  paymentMethod: PaymentMethodEnum;
+  paymentMethod: PaymentMethodEnum | null;
   customerName: string;
   customerPhone: string;
   subtotal: string;

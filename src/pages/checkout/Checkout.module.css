@@ -217,10 +217,7 @@
   gap: 10px;
 }
 
-.tableChoices { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
-.tableChoice { min-width: 44px; min-height: 40px; padding: 8px 14px; border: 1px solid var(--border-color); border-radius: 10px; background: var(--surface-muted); color: var(--textPrimary); font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
-.tableChoiceActive { border-color: var(--highlight); background: var(--highlight); color: #171717; }
-.tableChoice:focus-visible { outline: 2px solid var(--highlight); outline-offset: 3px; }
+.identifiedTable { display: flex; align-items: center; gap: 10px; margin: 12px 0; padding: 14px; border: 1px solid var(--border-color); border-radius: 12px; background: var(--surface-muted); color: var(--highlight); font-size: 15px; }
 
 .row2 {
   display: grid;

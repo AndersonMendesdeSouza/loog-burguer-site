@@ -9,7 +9,10 @@ import {
   Trash2,
   StickyNote,
   ArrowRight,
+  ChevronRight,
+  ShoppingBag,
 } from "lucide-react";
+import ConfirmationModal from "../../components/ConfirmationModal/ConfirmationModal";
 import { useNavigate } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import { useStoreStatus } from "../../hooks/useStoreStatus";
@@ -94,7 +97,8 @@ export default function Cart() {
   const [items, setItems] = useState<CartItem[]>(parseStoredCartItems);
   const navigation = useNavigate();
   const [orderObs, setOrderObs] = useState("");
-  const deliveryFee = 5;
+  const [showClearConfirmation, setShowClearConfirmation] = useState(false);
+  const deliveryFee = 0;
   const storeStatus = useStoreStatus();
 
   const subtotal = useMemo(() => {
@@ -113,7 +117,9 @@ export default function Cart() {
   const getKeyFromItem = (it: CartItem) => {
     const id = String(it.id ?? "").trim();
     if (id) return `id:${id}`;
-    return `name:${String(it.name ?? "").trim().toLowerCase()}`;
+    return `name:${String(it.name ?? "")
+      .trim()
+      .toLowerCase()}`;
   };
 
   const dec = (target: CartItem) => {
@@ -122,8 +128,8 @@ export default function Cart() {
       items.map((it) =>
         getKeyFromItem(it) === key
           ? { ...it, qty: Math.max(1, it.qty - 1) }
-          : it
-      )
+          : it,
+      ),
     );
   };
 
@@ -131,8 +137,8 @@ export default function Cart() {
     const key = getKeyFromItem(target);
     persist(
       items.map((it) =>
-        getKeyFromItem(it) === key ? { ...it, qty: it.qty + 1 } : it
-      )
+        getKeyFromItem(it) === key ? { ...it, qty: it.qty + 1 } : it,
+      ),
     );
   };
 
@@ -149,6 +155,20 @@ export default function Cart() {
   return (
     <div className={styles.wrap}>
       <ToastContainer position="top-center" />
+      {showClearConfirmation && (
+        <ConfirmationModal
+          icon={<Trash2 size={24} />}
+          title="Limpar carrinho?"
+          description="Todos os itens serão removidos do seu carrinho."
+          confirmLabel="Limpar carrinho"
+          onCancel={() => setShowClearConfirmation(false)}
+          onConfirm={() => {
+            persist([]);
+            setOrderObs("");
+            setShowClearConfirmation(false);
+          }}
+        />
+      )}
       <div
         className={styles.screen}
         style={
@@ -171,61 +191,87 @@ export default function Cart() {
               <ArrowLeft size={20} color={Colors.Texts.primary} />
             </button>
 
-            <h1 className={styles.title}>Seu Pedido</h1>
+            <h1 className={styles.title}>Seu carrinho</h1>
 
             {items.length > 0 && (
-              <div className={styles.linkBtn} onClick={() => navigation("/")}>
-                Continuar comprando
-              </div>
+              <button
+                type="button"
+                className={styles.linkBtn}
+                onClick={() => setShowClearConfirmation(true)}
+              >
+                <Trash2 size={16} aria-hidden="true" />
+                Limpar
+              </button>
             )}
           </header>
 
           <div className={styles.list}>
             {items.length > 0 ? (
               items.map((it) => (
-                <div key={getKeyFromItem(it)} className={styles.card}>
+                <article key={getKeyFromItem(it)} className={styles.card}>
                   <div className={styles.thumbWrap}>
-                    <img className={styles.thumb} src={it.image} alt={it.name} />
+                    <img
+                      className={styles.thumb}
+                      src={it.image}
+                      alt={it.name}
+                    />
                   </div>
 
                   <div className={styles.cardInfo}>
-                    <div className={styles.nameRow}>
-                      <div className={styles.nameCol}>
-                        <div className={styles.itemName}>{it.name}</div>
-                        <div className={styles.itemPrice}>{brl(it.price)}</div>
-                      </div>
+                    <h2 className={styles.itemName}>{it.name}</h2>
+                    {it.subtitle && (
+                      <p className={styles.subLine}>{it.subtitle}</p>
+                    )}
+                    {it.note && <p className={styles.noteLine}>{it.note}</p>}
+                  </div>
 
-                      <div className={styles.qtyArea}>
-                        <div className={styles.qtyBox}>
-                          <button className={styles.qtyBtn} onClick={() => dec(it)}>
-                            <Minus size={16} />
-                          </button>
+                  <div className={styles.cardFooter}>
+                    <span className={styles.itemPrice}>{brl(it.price)}</span>
+                    <div className={styles.qtyArea}>
+                      <div className={styles.qtyBox}>
+                        <button
+                          type="button"
+                          className={styles.qtyBtn}
+                          aria-label={`Diminuir quantidade de ${it.name}`}
+                          disabled={it.qty <= 1}
+                          onClick={() => dec(it)}
+                        >
+                          <Minus size={16} />
+                        </button>
 
-                          <div className={styles.qtyValue}>{it.qty}</div>
+                        <div className={styles.qtyValue}>{it.qty}</div>
 
-                          <button
-                            className={`${styles.qtyBtn} ${styles.qtyBtnPlus}`}
-                            onClick={() => inc(it)}
-                          >
-                            <Plus size={16} />
-                          </button>
-                        </div>
-
-                        <button className={styles.trashBtn} onClick={() => remove(it)}>
-                          <Trash2 size={18} />
+                        <button
+                          type="button"
+                          className={`${styles.qtyBtn} ${styles.qtyBtnPlus}`}
+                          aria-label={`Aumentar quantidade de ${it.name}`}
+                          onClick={() => inc(it)}
+                        >
+                          <Plus size={16} />
                         </button>
                       </div>
-                    </div>
 
-                    {it.subtitle && <div className={styles.subLine}>{it.subtitle}</div>}
-                    {it.note && <div className={styles.noteLine}>{it.note}</div>}
+                      <button
+                        type="button"
+                        className={styles.trashBtn}
+                        aria-label={`Remover ${it.name}`}
+                        onClick={() => remove(it)}
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
                   </div>
-                </div>
+                </article>
               ))
             ) : (
               <div className={styles.emptyState}>
-                <h3>Você ainda não possui pedidos</h3>
-                <button className={styles.emptyButton} onClick={() => navigation("/")}>
+                <ShoppingBag size={32} aria-hidden="true" />
+                <h2>Seu carrinho está vazio</h2>
+                <p>Escolha seus favoritos no cardápio.</p>
+                <button
+                  className={styles.emptyButton}
+                  onClick={() => navigation("/")}
+                >
                   Fazer pedido
                 </button>
               </div>
@@ -233,18 +279,33 @@ export default function Cart() {
           </div>
 
           {items.length > 0 && (
-            <section className={styles.obsSection}>
-              <div className={styles.obsHeader}>
-                <StickyNote size={18} />
-                <span>Observações do pedido</span>
-              </div>
+            <>
+              <button
+                type="button"
+                className={styles.addItemsBtn}
+                onClick={() => navigation("/")}
+              >
+                <span className={styles.addItemsIcon}>
+                  <Plus size={20} />
+                </span>
+                <span>Adicionar mais itens</span>
+                <ChevronRight size={20} aria-hidden="true" />
+              </button>
+              <section className={styles.obsSection}>
+                <label className={styles.obsHeader} htmlFor="cart-observation">
+                  <StickyNote size={18} aria-hidden="true" />
+                  <span>Observações do pedido</span>
+                </label>
 
-              <textarea
-                className={styles.textarea}
-                value={orderObs}
-                onChange={(e) => setOrderObs(e.target.value)}
-              />
-            </section>
+                <textarea
+                  className={styles.textarea}
+                  id="cart-observation"
+                  placeholder="Ex.: sem cebola, molho à parte..."
+                  value={orderObs}
+                  onChange={(e) => setOrderObs(e.target.value)}
+                />
+              </section>
+            </>
           )}
 
           <section className={styles.summary}>
@@ -261,8 +322,8 @@ export default function Cart() {
             <div className={styles.divider} />
 
             <div className={styles.totalRow}>
-              <span>Total</span>
-              <span>{brl(total)}</span>
+              <span className={styles.totalLabel}>Total</span>
+              <span className={styles.totalValue}>{brl(total)}</span>
             </div>
           </section>
         </div>
@@ -283,7 +344,7 @@ export default function Cart() {
                 const left = storeStatus.hoursToOpen;
                 toast.error(
                   `Fechado, abrimos em ${left} ${left === 1 ? "hora" : "horas"}`,
-                  { autoClose: 2500 }
+                  { autoClose: 2500 },
                 );
                 return;
               }
@@ -293,10 +354,8 @@ export default function Cart() {
               });
             }}
           >
-            <span>Finalizar Pedido</span>
-            <span>
-              {brl(total)} <ArrowRight size={18} />
-            </span>
+            <span>Continuar</span>
+            <ArrowRight size={20} aria-hidden="true" />
           </button>
         </div>
       </div>
