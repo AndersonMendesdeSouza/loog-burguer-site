@@ -217,6 +217,11 @@
   gap: 10px;
 }
 
+.tableChoices { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.tableChoice { min-width: 44px; min-height: 40px; padding: 8px 14px; border: 1px solid var(--border-color); border-radius: 10px; background: var(--surface-muted); color: var(--textPrimary); font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
+.tableChoiceActive { border-color: var(--highlight); background: var(--highlight); color: #171717; }
+.tableChoice:focus-visible { outline: 2px solid var(--highlight); outline-offset: 3px; }
+
 .row2 {
   display: grid;
   grid-template-columns: 1fr 86px;
@@ -238,6 +243,7 @@
   border: 1px solid var(--border-color);
   border-radius: 14px;
   background: var(--surface-muted);
+  margin-bottom: 15px;
 }
 
 .orderTypeButton {

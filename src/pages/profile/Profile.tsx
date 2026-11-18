@@ -170,8 +170,7 @@ export default function Profile() {
 
   function handleAuthenticationError(error: unknown, reason: "profile" | "addresses") {
     if (!isAxiosError(error) || error.response?.status !== 401) return false;
-    contextLogout();
-    setAuthRequest(reason);
+    if (!localStorage.getItem("token")) setAuthRequest(reason);
     return true;
   }
 
@@ -923,7 +922,6 @@ export default function Profile() {
           onClose={() => setShowEditProfile(false)}
           onAuthRequired={() => {
             setShowEditProfile(false);
-            contextLogout();
             setAuthRequest("profile");
           }}
           onUpdated={(updatedUser) => {

@@ -2,6 +2,8 @@ import type { PaymentMethodEnum } from "../enums/payment-method.enum";
 import type { OrderItem } from "../../types/order-item.type";
 import type { AddressResponseDto } from "./address-response.dto";
 import type { ChatResponseDto } from "./chat-response.dto";
+import type { OrderDeliveryAddressRequestDto } from "../request/order-delivery-address-request.dto";
+import type { TableResponseDto } from "./table-response.dto";
 
 type OrderHistory = {
   status: string;
@@ -13,10 +15,13 @@ type OrderHistory = {
 export interface OrderResponseDto {
   id: string;
   mesaId?: string;
+  tableId?: string | null;
+  table?: TableResponseDto | null;
   userId: string | null;
   addressId?: string;
   chatId?: string;
   address?: AddressResponseDto;
+  deliveryAddress?: OrderDeliveryAddressRequestDto | null;
   chat?: ChatResponseDto;
   code: number;
   status: string;

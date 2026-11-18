@@ -57,7 +57,7 @@ function App() {
           <Route path="main" element={<Main />} />
           <Route path="foodDetails" element={<FoodDetails />} />
           <Route path="cart" element={<Cart />} />
-          <Route path="checkout" element={<Checkout />} />
+          <Route path="checkout" element={<Checkout mesaId={mesaId} />} />
           <Route path="order-inform" element={<OrderInform />} />
           <Route path="pedidos" element={<Orders />} />
           {/* <Route path="favoritos" element={<Favorites />} /> */}

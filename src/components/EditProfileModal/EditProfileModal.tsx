@@ -91,7 +91,11 @@ export default function EditProfileModal({
       if (isEmailAlreadyRegisteredError(error)) {
         setErrors({ email: "Este e-mail já está em uso. Informe outro." });
       } else if (isAxiosError(error) && error.response?.status === 401) {
-        onAuthRequired();
+        if (!localStorage.getItem("token")) {
+          onAuthRequired();
+        } else {
+          setRequestError("Não foi possível atualizar o perfil. Tente novamente.");
+        }
       } else {
         setRequestError(
           getRequestErrorMessage(error, "Não foi possível atualizar o perfil. Tente novamente."),

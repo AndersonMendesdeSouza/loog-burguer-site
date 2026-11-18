@@ -29,6 +29,10 @@ import TableIdentifiedModal from "../../components/TableIdentifiedMesa/TableIden
 import { useAuth } from "../../contexts/AuthContext";
 import AuthRequiredModal from "../../components/AuthRequiredModal/AuthRequiredModal";
 import { isAxiosError } from "axios";
+import type { OrderDeliveryAddressRequestDto } from "../../dtos/request/order-delivery-address-request.dto";
+import OrderDeliveryAddressForm from "./OrderDeliveryAddressForm";
+import { TableService } from "../../service/table.service";
+import type { TableResponseDto } from "../../dtos/response/table-response.dto";
 
 type CartItem = {
   id: string;
@@ -56,6 +60,10 @@ type CheckoutCssVars = CSSProperties & {
   "--highlight": string;
   "--textPrimary": string;
   "--textSecondary": string;
+};
+
+type TableIdentifiedMesaProps = {
+  mesaId: string | null;
 };
 
 const LS_SELECTED_KEY = "mb_checkout_selected_address_v1";
@@ -93,10 +101,10 @@ function formatAddressDetails(address: AddressResponseDto) {
     .join(" - ");
 }
 
-export default function Checkout() {
+export default function Checkout({ mesaId }: TableIdentifiedMesaProps) {
   const nav = useNavigate();
   const location = useLocation();
-  const { isAuthenticated, loading: authLoading, logout } = useAuth();
+  const { isAuthenticated, loading: authLoading } = useAuth();
   const [showAuthRequired, setShowAuthRequired] = useState(false);
   const state = (location.state || {}) as Partial<CheckoutNavState>;
   const items = state.items || [];
@@ -111,13 +119,18 @@ export default function Checkout() {
   const [needChange, setNeedChange] = useState<boolean | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showTableConfirmation, setShowTableConfirmation] = useState(false);
-  const [tableNumber, setTableNumber] = useState(
-    () => sessionStorage.getItem("mesaId")?.trim() || "",
-  );
+  const [tables, setTables] = useState<TableResponseDto[]>([]);
+  const [tableId, setTableId] = useState("");
+  const [loadingTables, setLoadingTables] = useState(false);
+  const [tableError, setTableError] = useState("");
+  const selectedTable = tables.find((table) => table.id === tableId);
+  const tableNumber = selectedTable ? String(selectedTable.number) : "";
+  const identifiedTableNumber = mesaId?.trim() || "";
+  const hasIdentifiedTable = identifiedTableNumber.length > 0;
   const [orderType, setOrderType] = useState<"table" | "delivery">(
-    () => (sessionStorage.getItem("mesaId")?.trim() ? "table" : "delivery"),
+    () => (hasIdentifiedTable ? "table" : "delivery"),
   );
-  const isTableOrder = orderType === "table";
+  const isTableOrder = hasIdentifiedTable && orderType === "table";
   const deliveryFee = !isTableOrder && items.length ? baseDeliveryFee : 0;
   const total = subtotal + deliveryFee;
   const storeStatus = useStoreStatus();
@@ -130,9 +143,48 @@ export default function Checkout() {
   );
   const [loadingAddresses, setLoadingAddresses] = useState(true);
   const [addressError, setAddressError] = useState("");
+  const [addressMode, setAddressMode] = useState<"saved" | "manual">("saved");
+  const useManualAddress = !isAuthenticated || addressMode === "manual";
+  const [manualAddress, setManualAddress] = useState<OrderDeliveryAddressRequestDto>({
+    street: "", number: "", block: "", lot: "", neighborhood: "",
+    city: "Buriti Alegre", state: "GO", zipCode: "75660-000", complement: "", reference: "",
+  });
 
   const brl = (v: number) =>
     v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
+  useEffect(() => {
+    setOrderType(hasIdentifiedTable ? "table" : "delivery");
+  }, [hasIdentifiedTable]);
+
+  useEffect(() => {
+    if (!isTableOrder) return;
+    let active = true;
+    async function loadTables() {
+      setLoadingTables(true);
+      setTableError("");
+      try {
+        const response = await TableService.findAll();
+        if (!active) return;
+        const availableTables = response.filter((table) => table.isActive);
+        setTables(availableTables);
+        const storedNumber = mesaId?.trim();
+        setTableId((current) => {
+          if (availableTables.some((table) => table.id === current)) return current;
+          return availableTables.find((table) => String(table.number) === storedNumber)?.id ?? "";
+        });
+      } catch (error) {
+        if (!active) return;
+        setTables([]);
+        setTableId("");
+        setTableError(getRequestErrorMessage(error, "Não foi possível carregar as mesas."));
+      } finally {
+        if (active) setLoadingTables(false);
+      }
+    }
+    void loadTables();
+    return () => { active = false; };
+  }, [isTableOrder]);
 
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -204,8 +256,7 @@ export default function Checkout() {
       } catch (error) {
         if (active) {
           if (isAxiosError(error) && error.response?.status === 401) {
-            logout();
-            setShowAuthRequired(true);
+            if (!localStorage.getItem("token")) setShowAuthRequired(true);
             return;
           }
           setAddressError(
@@ -242,9 +293,11 @@ export default function Checkout() {
   const step1Done =
     fullName.trim().length > 0 && onlyDigits(phone).length >= 10;
 
-  const step2Done = isTableOrder
-    ? tableNumber.trim().length > 0
-    : isAuthenticated && !!selectedAddress && !loadingAddresses && !addressError;
+  const manualAddressValid = [manualAddress.street, manualAddress.number, manualAddress.neighborhood, manualAddress.city].every((value) => value.trim().length > 0)
+    && /^[A-Z]{2}$/.test(manualAddress.state) && /^\d{5}-?\d{3}$/.test(manualAddress.zipCode);
+  let step2Done = isAuthenticated && !!selectedAddress && !loadingAddresses && !addressError;
+  if (isTableOrder) step2Done = !!selectedTable && !loadingTables && !tableError;
+  else if (useManualAddress) step2Done = manualAddressValid;
 
   const step3Done =
     payment !== PaymentMethod.CASH ||
@@ -276,11 +329,13 @@ export default function Checkout() {
     const orderObservation = extraInfo.join(" | ");
 
     return {
-      mesaId: isTableOrder ? tableNumber.trim() : undefined,
+      tableId: isTableOrder ? selectedTable?.id : undefined,
+      mesaId: isTableOrder ? identifiedTableNumber : undefined,
       paymentMethod: payment,
       customerName: fullName.trim(),
       customerPhone: onlyDigits(phone),
-      addressId: isTableOrder ? undefined : selectedAddress?.id,
+      addressId: !isTableOrder && !useManualAddress ? selectedAddress?.id : undefined,
+      deliveryAddress: !isTableOrder && useManualAddress ? manualAddress : undefined,
       subtotal,
       deliveryFee,
       discount: 0,
@@ -491,30 +546,32 @@ export default function Checkout() {
             <span className={styles.label} id="order-type-label">
               Como você quer receber seu pedido?
             </span>
-            <div
-              className={styles.orderTypeSwitch}
-              role="group"
-              aria-labelledby="order-type-label"
-            >
-              <button
-                type="button"
-                className={`${styles.orderTypeButton} ${isTableOrder ? styles.orderTypeActive : ""}`}
-                aria-pressed={isTableOrder}
-                onClick={() => setOrderType("table")}
+            {hasIdentifiedTable ? (
+              <div
+                className={styles.orderTypeSwitch}
+                role="group"
+                aria-labelledby="order-type-label"
               >
-                <UtensilsCrossed size={16} aria-hidden="true" />
-                Na mesa
-              </button>
-              <button
-                type="button"
-                className={`${styles.orderTypeButton} ${!isTableOrder ? styles.orderTypeActive : ""}`}
-                aria-pressed={!isTableOrder}
-                onClick={() => setOrderType("delivery")}
-              >
-                <Truck size={16} aria-hidden="true" />
-                Para entrega
-              </button>
-            </div>
+                <button
+                  type="button"
+                  className={`${styles.orderTypeButton} ${isTableOrder ? styles.orderTypeActive : ""}`}
+                  aria-pressed={isTableOrder}
+                  onClick={() => setOrderType("table")}
+                >
+                  <UtensilsCrossed size={16} aria-hidden="true" />
+                  Na mesa
+                </button>
+                <button
+                  type="button"
+                  className={`${styles.orderTypeButton} ${!isTableOrder ? styles.orderTypeActive : ""}`}
+                  aria-pressed={!isTableOrder}
+                  onClick={() => setOrderType("delivery")}
+                >
+                  <Truck size={16} aria-hidden="true" />
+                  Para entrega
+                </button>
+              </div>
+            ) : null}
           </div>
         </section>
 
@@ -524,20 +581,16 @@ export default function Checkout() {
               <UtensilsCrossed size={16} />
               <span>Pedido na mesa</span>
             </div>
-            <label className={styles.field}>
-              <span className={styles.label}>Número da mesa</span>
-              <input
-                className={styles.input}
-                value={tableNumber}
-                onChange={(event) => setTableNumber(event.target.value)}
-                placeholder="Informe o número da mesa"
-                inputMode="numeric"
-                required
-              />
-              <span className={styles.label}>
-                Seu pedido será levado até esta mesa, sem taxa de entrega.
-              </span>
-            </label>
+            <span className={styles.label} id="table-options-label">Selecione a mesa</span>
+            {loadingTables && <p role="status" className={styles.label}>Carregando mesas...</p>}
+            {tableError && <p role="alert" className={styles.label}>{tableError}</p>}
+            {!loadingTables && !tableError && tables.length === 0 && <p className={styles.label}>Nenhuma mesa disponível no momento.</p>}
+            <div className={styles.tableChoices} role="group" aria-labelledby="table-options-label">
+              {tables.map((table) => (
+                <button key={table.id} type="button" className={`${styles.tableChoice} ${table.id === tableId ? styles.tableChoiceActive : ""}`} aria-label={`Mesa ${table.number}`} aria-pressed={table.id === tableId} disabled={isSubmitting} onClick={() => setTableId(table.id)}>{table.number}</button>
+              ))}
+            </div>
+            <p className={styles.label}>Seu pedido será levado até a mesa selecionada, sem taxa de entrega.</p>
           </section>
         ) : (
           <section className={styles.section}>
@@ -546,23 +599,14 @@ export default function Checkout() {
               <span>Endereço de entrega</span>
             </div>
 
-            {!isAuthenticated ? (
-              <div className={styles.emptyAddressCard}>
-                <div className={styles.emptyAddressTitle}>
-                  Entre na sua conta para pedir entrega
-                </div>
-                <div className={styles.emptyAddressDesc}>
-                  Para pedir na mesa, basta informar seus dados e o número da mesa.
-                </div>
-                <button
-                  type="button"
-                  className={styles.useNewBtn}
-                  onClick={() => setShowAuthRequired(true)}
-                  disabled={authLoading}
-                >
-                  {authLoading ? "Verificando acesso..." : "Entrar ou criar conta"}
-                </button>
+            {isAuthenticated && (
+              <div className={styles.orderTypeSwitch} role="group" aria-label="Escolher endereço de entrega">
+                <button type="button" className={`${styles.orderTypeButton} ${!useManualAddress ? styles.orderTypeActive : ""}`} aria-pressed={!useManualAddress} onClick={() => setAddressMode("saved")}>Endereço cadastrado</button>
+                <button type="button" className={`${styles.orderTypeButton} ${useManualAddress ? styles.orderTypeActive : ""}`} aria-pressed={useManualAddress} onClick={() => setAddressMode("manual")}>Informar neste pedido</button>
               </div>
+            )}
+            {useManualAddress ? (
+              <OrderDeliveryAddressForm address={manualAddress} onChange={(field, value) => setManualAddress((current) => ({ ...current, [field]: value }))} />
             ) : addressError ? (
               <div className={styles.emptyAddressCard}>
                 <div className={styles.emptyAddressTitle}>{addressError}</div>
@@ -588,7 +632,7 @@ export default function Checkout() {
                   Nenhum endereço cadastrado
                 </div>
                 <div className={styles.emptyAddressDesc}>
-                  Cadastre um endereço no perfil para finalizar o pedido.
+                  Cadastre um endereço no perfil ou use a opção de informar neste pedido.
                 </div>
                 <button
                   type="button"

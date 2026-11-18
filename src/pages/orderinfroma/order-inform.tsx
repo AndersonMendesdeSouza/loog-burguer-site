@@ -303,15 +303,20 @@ export default function OrderInform() {
   const stateAddressSub = state.address?.district
     ? `${state.address.district}${state.address.city ? ` - ${state.address.city}` : ""}${state.address.state ? `/${state.address.state}` : ""}${state.address.cep ? ` - ${state.address.cep}` : ""}`
     : "";
-  const orderAddressLine = order?.address
-    ? `${order.address.street}, ${order.address.number}`
+  const deliveryAddress = order?.deliveryAddress;
+  const orderAddress = deliveryAddress ?? order?.address;
+  const orderAddressLine = orderAddress
+    ? `${orderAddress.street}, ${orderAddress.number}`
     : "";
-  const orderAddressSub = order?.address
+  const orderAddressSub = orderAddress
     ? [
-        order.address.neighborhood,
-        `${order.address.city}/${order.address.state}`,
-        `CEP ${order.address.zipCode}`,
-        order.address.complement,
+        orderAddress.neighborhood,
+        `${orderAddress.city}/${orderAddress.state}`,
+        `CEP ${orderAddress.zipCode}`,
+        deliveryAddress?.block ? `Quadra ${deliveryAddress.block}` : "",
+        deliveryAddress?.lot ? `Lote ${deliveryAddress.lot}` : "",
+        orderAddress.complement,
+        orderAddress.reference,
       ]
         .filter(Boolean)
         .join(" - ")
