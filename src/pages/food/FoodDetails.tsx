@@ -11,9 +11,10 @@ import {
   ShoppingCart,
 } from "lucide-react";
 import type { FoodResponseDto } from "../../dtos/Food-Response.Dto";
-import { toast, ToastContainer } from "react-toastify";
+import { ToastContainer } from "react-toastify";
 import Colors from "../../themes/Colors";
 import { addCart } from "../../utils/cartStorage";
+import { showCartAddedToast } from "../../utils/cartToast";
 
 type Addon = {
   id: string;
@@ -61,7 +62,6 @@ export default function FoodDetails() {
 
   const [qty, setQty] = useState(1);
   const [note, setNote] = useState("");
-  const [cartActived, setCartActivedCart] = useState(false);
   const [products, setProducts] = useState<FoodResponseDto | null>(
     initialProduct,
   );
@@ -221,11 +221,6 @@ export default function FoodDetails() {
 
   if (!products) return null;
 
-  function activedCart() {
-    setCartActivedCart(true);
-    setTimeout(() => setCartActivedCart(false), 7000);
-  }
-
   return (
     <div
       className={styles.page}
@@ -240,18 +235,6 @@ export default function FoodDetails() {
       }
     >
       <ToastContainer position="top-center" />
-
-      {cartActived && (
-        <div className={styles.cartFloat}>
-          <button
-            className={styles.headerCartActived}
-            type="button"
-            onClick={() => navigation("/cart")}
-          >
-            <ShoppingCart size={20} />
-          </button>
-        </div>
-      )}
 
       <div className={styles.top} data-enter="page">
         <div className={styles.media}>
@@ -409,10 +392,7 @@ export default function FoodDetails() {
               onClick={() => {
                 if (!cartItem) return;
                 addCart(cartItem);
-                toast.success("Produto adicionado ao carrinho", {
-                  autoClose: 2000,
-                });
-                activedCart();
+                showCartAddedToast();
                 resetForNewProduct();
               }}
             >
@@ -467,10 +447,7 @@ export default function FoodDetails() {
                           qty: 1,
                           image: c.img,
                         });
-                        toast.success("Produto adicionado ao carrinho", {
-                          autoClose: 1500,
-                        });
-                        activedCart();
+                        showCartAddedToast();
                       }}
                     >
                       <Plus size={17} />

@@ -16,7 +16,7 @@
 
 .menu {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   align-items: center;
   gap: 8px;
   width: 100%;
@@ -43,12 +43,21 @@
   transition: color 0.2s ease, background-color 0.2s ease;
 }
 
+.link {
+  border: 0;
+  background: transparent;
+  font-family: inherit;
+}
+
 .link:hover {
   background-color: rgba(255, 255, 255, 0.03);
   color: #fff;
 }
 
 .active {
+  border: 0;
+  background: transparent;
+  font-family: inherit;
   color: #ffd400;
 }
 
@@ -75,6 +84,45 @@
   height: 28px;
   flex: 0 0 28px;
   stroke-width: 2;
+}
+
+.cartIconWrap {
+  position: relative;
+  display: inline-flex;
+}
+
+.cartBadge {
+  position: absolute;
+  top: -8px;
+  right: -11px;
+  display: grid;
+  min-width: 18px;
+  height: 18px;
+  place-items: center;
+  padding: 0 5px;
+  border: 2px solid var(--bg-primary);
+  border-radius: 999px;
+  background: #ed3d38;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.cartPulse {
+  animation: cart-pulse 220ms ease-out;
+}
+
+@keyframes cart-pulse {
+  0% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.28);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 
 @media (max-width: 640px) {

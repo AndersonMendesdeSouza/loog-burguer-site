@@ -1,9 +1,9 @@
 import { ShoppingCart } from "lucide-react";
 import type { CSSProperties } from "react";
 import styles from "./FoodCard.module.css";
-import { toast } from "react-toastify";
 import Colors from "../../themes/Colors";
 import { addCart } from "../../utils/cartStorage";
+import { showCartAddedToast } from "../../utils/cartToast";
 
 type BestSellerCssVars = CSSProperties & {
   "--bestSellerBg": string;
@@ -106,7 +106,7 @@ export function FoodCard({
             onClick={(event) => {
               event.stopPropagation();
               addCart(item);
-              toast.success("Produto adicionado ao carrinho", { autoClose: 1500 });
+              showCartAddedToast();
               functions?.();
             }}
             aria-label={`Adicionar ${name} ao carrinho`}

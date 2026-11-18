@@ -41,16 +41,9 @@ export default function Main() {
   const [search, setSearch] = useState("");
   const searchRef = useRef<HTMLInputElement | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
-  const [cartActived, setCartActivedCart] = useState(false);
   const storeStatus = useStoreStatus();
   const openNow = storeStatus.openNow;
 
-  function activedCart() {
-    setCartActivedCart(true);
-    setTimeout(() => {
-      setCartActivedCart(false);
-    }, 7000);
-  }
   useEffect(() => {
     let active = true;
 
@@ -143,19 +136,6 @@ export default function Main() {
     <div className={styles.screen}>
       <div className={styles.page}>
         <ToastContainer position="top-right" />
-        {cartActived && (
-          <div className={styles.cartFloat}>
-            <button
-              className={styles.headerCartActived}
-              type="button"
-              onClick={() => navigation("/cart")}
-              aria-label="Abrir carrinho"
-            >
-              <ShoppingCart size={20} />
-            </button>
-          </div>
-        )}
-
         <Header
           storeOpen={storeStatus.loading ? undefined : openNow}
           search={search}
@@ -322,7 +302,7 @@ export default function Main() {
                           img={item.img}
                           badge={item.badge}
                           onDetails={() => goDetails(item)}
-                          functions={() => activedCart()}
+                          functions={() => {}}
                         />
                       ))}
                     </div>
