@@ -158,33 +158,29 @@ export default function Checkout({ mesaId }: TableIdentifiedMesaProps) {
   }, [hasIdentifiedTable]);
 
   useEffect(() => {
-    if (!isTableOrder) return;
+    if (!isTableOrder || !identifiedTableNumber) return;
     let active = true;
-    async function loadTables() {
+    async function loadTable() {
       setLoadingTables(true);
       setTableError("");
       try {
-        const response = await TableService.findAll();
+        const table = await TableService.findOneNumber(identifiedTableNumber);
         if (!active) return;
-        const availableTables = response.filter((table) => table.isActive);
-        setTables(availableTables);
-        const storedNumber = mesaId?.trim();
-        setTableId((current) => {
-          if (availableTables.some((table) => table.id === current)) return current;
-          return availableTables.find((table) => String(table.number) === storedNumber)?.id ?? "";
-        });
+        setTables(table.isActive ? [table] : []);
+        setTableId(table.isActive ? table.id : "");
+        if (!table.isActive) setTableError("Esta mesa não está disponível no momento.");
       } catch (error) {
         if (!active) return;
         setTables([]);
         setTableId("");
-        setTableError(getRequestErrorMessage(error, "Não foi possível carregar as mesas."));
+        setTableError(getRequestErrorMessage(error, "Não foi possível identificar a mesa."));
       } finally {
         if (active) setLoadingTables(false);
       }
     }
-    void loadTables();
+    void loadTable();
     return () => { active = false; };
-  }, [isTableOrder]);
+  }, [isTableOrder, identifiedTableNumber]);
 
   useEffect(() => {
     if (!isAuthenticated) return;
