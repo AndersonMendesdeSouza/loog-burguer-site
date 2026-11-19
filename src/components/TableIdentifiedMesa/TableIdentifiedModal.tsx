@@ -17,7 +17,7 @@ type TableIdentifiedModalProps = {
 export default function TableIdentifiedModal({
   tableNumber,
   title = "Mesa identificada",
-  description = "Este aviso fecha automaticamente em 5 segundos.",
+  description = "Sua identificação da mesa é válida por 20 minutos a partir da leitura da plaquinha. Após esse prazo, aproxime o telefone ou escaneie o QR Code novamente para fazer outro pedido na mesa.",
   closeLabel = "Fechar",
   confirmLabel = "Confirmar pedido",
   isConfirming = false,
