@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState, type RefObject } from "react";
-import { Hamburger, Search, ShoppingCart, UserRound, X } from "lucide-react";
+import { Hamburger, MessageSquare, Search, ShoppingCart, UserRound, X } from "lucide-react";
 import styles from "./Header.module.css";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
@@ -7,6 +7,7 @@ import {
   CART_UPDATED_EVENT,
   getCartQuantity,
 } from "../../utils/cartStorage";
+import { useMessageNotifications } from "../../contexts/MessageNotificationsContext";
 import { useAuth } from "../../contexts/AuthContext";
 
 type HeaderProps = {
@@ -33,6 +34,7 @@ export function Header({
   onClearSearch,
 }: HeaderProps) {
   const navigate = useNavigate();
+  const { unreadCount } = useMessageNotifications();
   const location = useLocation();
   const { isAuthenticated, loading: authLoading } = useAuth();
   const [storedCartCount, setStoredCartCount] = useState(getCartQuantity);
@@ -176,6 +178,11 @@ export function Header({
           )}
 
           <div className={styles.headerActions}>
+            <button className={styles.cartButton} type="button" onClick={() => navigate("/mensagens")}
+              aria-label={`Abrir mensagens: ${unreadCount} não lidas`}>
+              <MessageSquare size={24} aria-hidden="true" />
+              {unreadCount > 0 && <span className={styles.cartBadge}>{unreadCount > 99 ? "99+" : unreadCount}</span>}
+            </button>
             <button
               className={styles.cartButton}
               type="button"

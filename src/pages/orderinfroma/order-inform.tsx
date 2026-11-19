@@ -33,6 +33,7 @@ import { OrderController } from "../../controllers/order.controller";
 import { ChatMessageSenderType } from "../../dtos/enums/chat-message-sender-type.enum";
 import type { PaymentMethodEnum } from "../../dtos/enums/payment-method.enum";
 import type { OrderResponseDto } from "../../dtos/response/order-response.dto";
+import { useMessageNotifications } from "../../contexts/MessageNotificationsContext";
 import { ChatService } from "../../service/chat.service";
 import { formatOrderCode } from "../../utils/formatOrderCode";
 import { playNotificationSound } from "../../utils/notificationSound";
@@ -179,7 +180,8 @@ export default function OrderInform({ orderUpdates }: OrderInformProps) {
   const previousStatusRef = useRef<string | null>(null);
   const miniChatRef = useRef<HTMLElement | null>(null);
   const miniChatMessagesRef = useRef<HTMLDivElement | null>(null);
-  const lookup = state.orderId || state.orderNumber || "";
+  const { notifications, markRead } = useMessageNotifications();
+  const lookup = new URLSearchParams(location.search).get("orderId") || state.orderId || state.orderNumber || "";
   const refreshKey = orderUpdates[order?.id || lookup] || 0;
 
   useEffect(() => {
@@ -240,6 +242,17 @@ export default function OrderInform({ orderUpdates }: OrderInformProps) {
       behavior: "smooth",
     });
   }, [miniChatMessages]);
+
+  useEffect(() => {
+    const chatElement = miniChatRef.current;
+    if (!order || !chatElement) return;
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) markRead(order.id, miniChatMessages.map((message) => message.id));
+    }, { threshold: 0.2 });
+    observer.observe(chatElement);
+    if (location.hash === "#order-chat") chatElement.scrollIntoView({ behavior: "smooth", block: "start" });
+    return () => observer.disconnect();
+  }, [order, miniChatMessages, notifications, markRead, location.hash]);
 
   const items = useMemo(() => {
     if (order?.items?.length) {
@@ -782,7 +795,7 @@ export default function OrderInform({ orderUpdates }: OrderInformProps) {
         </div>
 
         {canUseChat && (
-          <section ref={miniChatRef} className={styles.miniChatCard}>
+          <section id="order-chat" ref={miniChatRef} className={styles.miniChatCard} style={{ scrollMarginTop: "calc(var(--site-header-height, 70px) + 16px)" }}>
             <div className={styles.miniChatHeader}>
               <div className={cx(styles.sectionTitle, styles.miniChatTitle)}>
                 <MessageCircle />

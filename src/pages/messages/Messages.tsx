@@ -1,7 +1,7 @@
 import { ArrowLeft } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import styles from "./Messages.module.css";
-import { mockThreads } from "./messagesMock";
+import { useMessageNotifications } from "../../contexts/MessageNotificationsContext";
 
 type MessageLocationState = {
   returnTo?: string;
@@ -9,6 +9,7 @@ type MessageLocationState = {
 
 export default function Messages() {
   const navigate = useNavigate();
+  const { notifications, unreadCount, clearAll } = useMessageNotifications();
   const location = useLocation();
   const locationState = (location.state || {}) as MessageLocationState;
   const returnTo = locationState.returnTo || "/main";
@@ -32,34 +33,36 @@ export default function Messages() {
 
           <div>
             <h1>Mensagens</h1>
-            <p>Atendimento e atualizações do pedido.</p>
+            <p>{unreadCount} não lidas · Atendimento dos seus pedidos.</p>
           </div>
         </header>
 
+        <button type="button" className={styles.clearButton} onClick={clearAll} disabled={!notifications.length}>Apagar todas</button>
         <section className={styles.listShell} aria-label="Conversas">
-          {mockThreads.map((thread, index) => (
+          {!notifications.length && <p className={styles.empty}>Nenhuma mensagem recebida.</p>}
+          {notifications.map((thread) => (
             <button
               key={thread.id}
               className={`${styles.threadButton} ${
-                index === 0 ? styles.threadButtonActive : ""
+                !thread.read ? styles.threadButtonActive : ""
               }`}
               type="button"
               onClick={() =>
-                navigate(`/mensagens/${thread.id}`, { state: { returnTo } })
+                navigate(`/order-inform?orderId=${encodeURIComponent(thread.orderId)}#order-chat`)
               }
             >
               <span className={styles.threadAvatar}>
-                {thread.name.charAt(0)}
+                #
               </span>
               <span className={styles.threadInfo}>
                 <span className={styles.threadTop}>
-                  <strong>{thread.name}</strong>
-                  <small>{thread.time}</small>
+                  <strong>Pedido #{String(thread.orderCode).padStart(4, "0")}</strong>
+                  <small>{new Date(thread.createdAt).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</small>
                 </span>
-                <span className={styles.threadPreview}>{thread.preview}</span>
+                <span className={styles.threadPreview}>{thread.text}</span>
               </span>
-              {thread.unread ? (
-                <span className={styles.unreadBadge}>{thread.unread}</span>
+              {!thread.read ? (
+                <span className={styles.unreadBadge}>1</span>
               ) : null}
             </button>
           ))}

@@ -12,7 +12,7 @@
 
 .headerContent {
   display: grid;
-  grid-template-columns: auto minmax(160px, 1fr) auto 36px;
+  grid-template-columns: auto minmax(160px, 1fr) auto 80px;
   grid-template-areas: "brand search auth actions";
   align-items: center;
   gap: 18px;
@@ -116,6 +116,9 @@
 }
 
 .headerActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   grid-area: actions;
   justify-self: end;
 }
@@ -249,7 +252,7 @@
   }
 
   .headerContent {
-    grid-template-columns: minmax(0, 1fr) auto 36px;
+    grid-template-columns: minmax(0, 1fr) auto 80px;
     grid-template-areas:
       "brand auth actions"
       "search search search";
@@ -294,7 +297,7 @@
 
 @media (max-width: 520px) {
   .headerContent {
-    grid-template-columns: minmax(0, 1fr) 36px;
+    grid-template-columns: minmax(0, 1fr) 80px;
     grid-template-areas:
       "brand actions"
       "search search";
@@ -342,13 +345,13 @@
 
 @media (min-width: 901px) {
   .headerContent {
-    grid-template-columns: auto auto minmax(120px, 1fr) auto 36px;
+    grid-template-columns: auto auto minmax(120px, 1fr) auto 80px;
     grid-template-areas: "brand navigation search auth actions";
     gap: clamp(12px, 1.6vw, 24px);
   }
 
   .withoutSearch {
-    grid-template-columns: auto minmax(0, 1fr) auto 36px;
+    grid-template-columns: auto minmax(0, 1fr) auto 80px;
     grid-template-areas: "brand navigation auth actions";
   }
 
@@ -398,4 +401,11 @@
     height: 70px;
     padding: 0;
   }
+}
+
+@media (max-width: 360px) {
+  .brand { gap: 6px; flex-wrap: wrap; }
+  .brandName { font-size: 20px; }
+  .brandLogo { width: 27px; height: 27px; flex-basis: 27px; }
+  .storeStatus { margin-left: 33px; }
 }

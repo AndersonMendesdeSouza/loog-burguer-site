@@ -360,3 +360,7 @@
     max-width: 84%;
   }
 }
+
+.clearButton { display: block; margin: 0 0 12px auto; padding: 8px 12px; background: transparent; border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-secondary); cursor: pointer; }
+.clearButton:disabled { opacity: .5; cursor: default; }
+.empty { padding: 24px 16px; text-align: center; color: var(--text-secondary); }

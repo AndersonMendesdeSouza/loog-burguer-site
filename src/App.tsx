@@ -13,6 +13,7 @@ import Profile from "./pages/profile/Profile";
 import { useEffect, useState } from "react";
 import Login from "./pages/login/login";
 import MessageDetails from "./pages/messages/MessageDetails";
+import { MessageNotificationsProvider } from "./contexts/MessageNotificationsContext";
 import Messages from "./pages/messages/Messages";
 import Register from "./pages/register/register";
 import TableIdentifiedMesa from "./components/TableIdentifiedModal/TableIdentifiedMesa";
@@ -68,7 +69,7 @@ function App() {
     };
   }, []);
   return (
-    <>
+    <MessageNotificationsProvider>
       <ScrollToTop />
       {mesaId && showTableModal && (
         <TableIdentifiedModal
@@ -97,7 +98,7 @@ function App() {
           <Route path="perfil" element={<Profile />} />
         </Route>
       </Routes>
-    </>
+    </MessageNotificationsProvider>
   );
 }
 
