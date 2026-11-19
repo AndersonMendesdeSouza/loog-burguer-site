@@ -6,9 +6,16 @@ export type TableSession = {
   expiresAt: number;
 };
 
-export function createTableSession(mesaId: string, now = Date.now()): TableSession | null {
+export function createTableSession(
+  mesaId: string,
+  now = Date.now(),
+): TableSession | null {
   const number = Number(mesaId.trim());
-  if (!/^\d+$/.test(mesaId.trim()) || !Number.isSafeInteger(number) || number <= 0) {
+  if (
+    !/^\d+$/.test(mesaId.trim()) ||
+    !Number.isSafeInteger(number) ||
+    number <= 0
+  ) {
     return null;
   }
   return { mesaId: String(number), expiresAt: now + TABLE_SESSION_DURATION_MS };
@@ -16,11 +23,19 @@ export function createTableSession(mesaId: string, now = Date.now()): TableSessi
 
 export function readTableSession(): TableSession | null {
   try {
-    const stored: unknown = JSON.parse(sessionStorage.getItem(TABLE_SESSION_STORAGE_KEY) || "null");
-    if (!stored || typeof stored !== "object" ||
-      !("mesaId" in stored) || typeof stored.mesaId !== "string" ||
-      !("expiresAt" in stored) || typeof stored.expiresAt !== "number" ||
-      !Number.isFinite(stored.expiresAt) || stored.expiresAt <= 0) {
+    const stored: unknown = JSON.parse(
+      sessionStorage.getItem(TABLE_SESSION_STORAGE_KEY) || "null",
+    );
+    if (
+      !stored ||
+      typeof stored !== "object" ||
+      !("mesaId" in stored) ||
+      typeof stored.mesaId !== "string" ||
+      !("expiresAt" in stored) ||
+      typeof stored.expiresAt !== "number" ||
+      !Number.isFinite(stored.expiresAt) ||
+      stored.expiresAt <= 0
+    ) {
       return null;
     }
     const session = createTableSession(stored.mesaId, 0);
@@ -32,7 +47,10 @@ export function readTableSession(): TableSession | null {
   }
 }
 
-export function isTableSessionValid(session: TableSession | null, now = Date.now()): boolean {
+export function isTableSessionValid(
+  session: TableSession | null,
+  now = Date.now(),
+): boolean {
   return session !== null && session.expiresAt > now;
 }
 

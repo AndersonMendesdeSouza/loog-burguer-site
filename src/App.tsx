@@ -1,4 +1,10 @@
-import { Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
+import {
+  Navigate,
+  Route,
+  Routes,
+  useLocation,
+  useNavigate,
+} from "react-router-dom";
 
 import { DashboardLayout } from "./components/layouts/DashboardLayout";
 import ScrollToTop from "./components/ScrollToTop";
@@ -39,7 +45,8 @@ function App() {
     () => tableSession !== null && !isTableSessionValid(tableSession),
   );
   const [showExpiredModal, setShowExpiredModal] = useState(tableSessionExpired);
-  const mesaId = tableSession && !tableSessionExpired ? tableSession.mesaId : null;
+  const mesaId =
+    tableSession && !tableSessionExpired ? tableSession.mesaId : null;
   const [showTableModal, setShowTableModal] = useState(true);
   const [orderUpdates, setOrderUpdates] = useState<Record<string, number>>({});
 
@@ -97,7 +104,10 @@ function App() {
     function handleVisibilityChange() {
       if (document.visibilityState === "visible") checkExpiration();
     }
-    let timeoutId = window.setTimeout(checkExpiration, Math.max(0, expiresAt - Date.now()));
+    let timeoutId = window.setTimeout(
+      checkExpiration,
+      Math.max(0, expiresAt - Date.now()),
+    );
     window.addEventListener("focus", checkExpiration);
     document.addEventListener("visibilitychange", handleVisibilityChange);
     return () => {
@@ -171,13 +181,16 @@ function App() {
           <Route path="main" element={<Main />} />
           <Route path="foodDetails" element={<FoodDetails />} />
           <Route path="cart" element={<Cart />} />
-          <Route path="checkout" element={
-            <Checkout
-              mesaId={mesaId}
-              tableSessionExpired={tableSessionExpired}
-              onValidateTableSession={validateTableSession}
-            />
-          } />
+          <Route
+            path="checkout"
+            element={
+              <Checkout
+                mesaId={mesaId}
+                tableSessionExpired={tableSessionExpired}
+                onValidateTableSession={validateTableSession}
+              />
+            }
+          />
           <Route
             path="order-inform"
             element={<OrderInform orderUpdates={orderUpdates} />}
