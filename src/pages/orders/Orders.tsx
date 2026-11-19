@@ -1,25 +1,28 @@
+import {
+  getOrderStatus,
+  isTableOrder,
+  isFinishedOrder,
+} from "../../utils/orderStatus";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  Bike,
-  Check,
-  ChefHat,
-  Home,
-  Map,
-} from "lucide-react";
+import { Bike, Check, ChefHat, Home, Map } from "lucide-react";
 import type { OrderResponseDto } from "../../dtos/response/order-response.dto";
 import { OrderService } from "../../service/order.service";
 import { formatOrderCode } from "../../utils/formatOrderCode";
-import { getOrderImageUrl, handleOrderImageError } from "../../utils/orderImage";
+import {
+  getOrderImageUrl,
+  handleOrderImageError,
+} from "../../utils/orderImage";
 import styles from "./Orders.module.css";
 
 type TabKey = "all" | "active" | "finished" | "canceled";
 
-type OrderStep = "received" | "preparing" | "route" | "delivered";
+type OrderStep = "received" | "preparing" | "route" | "delivered" | "ready";
 
 const STATUS_LABELS: Record<string, string> = {
   RECEIVED: "Recebido",
-  PREPARING: "Preparando",
+  PREPARING: "Em preparo",
+  READY: "Pronto",
   ON_ROUTE: "Saiu para entrega",
   DELIVERED: "Entregue",
   CANCELED: "Cancelado",
@@ -28,6 +31,7 @@ const STATUS_LABELS: Record<string, string> = {
 const STATUS_STEP: Record<string, OrderStep> = {
   RECEIVED: "received",
   PREPARING: "preparing",
+  READY: "ready",
   ON_ROUTE: "route",
   DELIVERED: "delivered",
 };
@@ -59,11 +63,6 @@ function getActiveStep(status: string): OrderStep {
   return STATUS_STEP[status] || "received";
 }
 
-function isStepDone(step: OrderStep, activeStep: OrderStep) {
-  const order = ["received", "preparing", "route", "delivered"];
-  return order.indexOf(step) <= order.indexOf(activeStep);
-}
-
 function getTabFromStatus(status: string): TabKey {
   if (status === "DELIVERED") return "finished";
   if (status === "CANCELED") return "canceled";
@@ -71,7 +70,7 @@ function getTabFromStatus(status: string): TabKey {
 }
 
 function getStatusTone(status: string) {
-  if (status === "DELIVERED") return "done";
+  if (status === "DELIVERED" || status === "READY") return "done";
   if (status === "CANCELED") return "canceled";
   if (status === "ON_ROUTE") return "route";
   return "active";
@@ -90,19 +89,50 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-function Timeline({ status }: { status: string }) {
+function Timeline({
+  status,
+  tableOrder,
+}: {
+  status: string;
+  tableOrder: boolean;
+}) {
   const activeStep = getActiveStep(status);
   const steps: { key: OrderStep; label: string; icon: React.ReactNode }[] = [
     { key: "received", label: "Recebido", icon: <Check size={20} /> },
-    { key: "preparing", label: "Preparando", icon: <ChefHat size={20} /> },
-    { key: "route", label: "Saiu para entrega", icon: <Bike size={20} /> },
-    { key: "delivered", label: "Entregue", icon: <Home size={20} /> },
+    { key: "preparing", label: "Em preparo", icon: <ChefHat size={20} /> },
+    ...(tableOrder
+      ? [
+          { key: "ready" as const, label: "Pronto", icon: <Check size={20} /> },
+          {
+            key: "delivered" as const,
+            label: "Entregue",
+            icon: <Home size={20} />,
+          },
+        ]
+      : [
+          {
+            key: "route" as const,
+            label: "Saiu para entrega",
+            icon: <Bike size={20} />,
+          },
+          {
+            key: "delivered" as const,
+            label: "Entregue",
+            icon: <Home size={20} />,
+          },
+        ]),
   ];
 
   return (
-    <div className={styles.timeline} data-active-step={activeStep}>
+    <div
+      className={styles.timeline}
+      data-active-step={activeStep}
+      data-table-order={tableOrder}
+    >
       {steps.map((step) => {
-        const done = isStepDone(step.key, activeStep);
+        const done =
+          steps.findIndex((entry) => entry.key === step.key) <=
+          steps.findIndex((entry) => entry.key === activeStep);
         return (
           <div
             key={step.key}
@@ -124,16 +154,22 @@ function OrderCard({
   order: OrderResponseDto;
   onDetails: () => void;
 }) {
+  const status = getOrderStatus(order);
   return (
     <section className={styles.currentOrder}>
       <div className={styles.orderTop}>
         <div>
           <h2>Pedido {getOrderCode(order)}</h2>
         </div>
-        <StatusBadge status={order.status} />
+        <StatusBadge status={status} />
       </div>
 
-      {order.status !== "CANCELED" && <Timeline status={order.status} />}
+      {status !== "CANCELED" && (
+        <Timeline
+          status={status}
+          tableOrder={isTableOrder(order) || order.type === "PICKUP"}
+        />
+      )}
 
       <div className={styles.items}>
         {order.items.map((item, index) => (
@@ -157,14 +193,22 @@ function OrderCard({
         <strong>{formatMoney(order.total)}</strong>
       </div>
 
-      {order.status !== "DELIVERED" && order.status !== "CANCELED" && (
-        <button className={styles.trackButton} type="button" onClick={onDetails}>
+      {!isFinishedOrder(order) && status !== "CANCELED" && (
+        <button
+          className={styles.trackButton}
+          type="button"
+          onClick={onDetails}
+        >
           <Map size={20} />
           Acompanhar pedido
         </button>
       )}
 
-      <button className={styles.detailsButton} type="button" onClick={onDetails}>
+      <button
+        className={styles.detailsButton}
+        type="button"
+        onClick={onDetails}
+      >
         Ver detalhes
       </button>
     </section>
@@ -212,7 +256,9 @@ export default function Orders() {
   const filteredOrders = useMemo(() => {
     if (activeTab === "all") return orders;
 
-    return orders.filter((order) => getTabFromStatus(order.status) === activeTab);
+    return orders.filter(
+      (order) => getTabFromStatus(getOrderStatus(order)) === activeTab,
+    );
   }, [activeTab, orders]);
 
   const goOrderDetails = (orderId: string) => {
@@ -225,7 +271,6 @@ export default function Orders() {
 
   return (
     <div className={styles.screen}>
-
       <main className={styles.content} data-enter="page">
         <h1 className={styles.title}>Pedidos</h1>
 

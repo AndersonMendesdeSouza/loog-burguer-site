@@ -160,6 +160,9 @@
   width: 76%;
 }
 
+
+.timeline[data-table-order="true"][data-active-step="ready"]::after { width: 51%; }
+
 .stepDone,
 .stepMuted {
   position: relative;

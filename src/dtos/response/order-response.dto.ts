@@ -25,6 +25,7 @@ export interface OrderResponseDto {
   chat?: ChatResponseDto;
   code: number;
   status: string;
+  type?: "DINE_IN" | "DELIVERY" | "PICKUP";
   paymentMethod: PaymentMethodEnum | null;
   customerName: string;
   customerPhone: string;

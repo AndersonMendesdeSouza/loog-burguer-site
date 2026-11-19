@@ -17,6 +17,7 @@ import Messages from "./pages/messages/Messages";
 import Register from "./pages/register/register";
 import TableIdentifiedMesa from "./components/TableIdentifiedModal/TableIdentifiedMesa";
 import TableIdentifiedModal from "./components/TableIdentifiedMesa/TableIdentifiedModal";
+import { socket } from "./service/gatway";
 
 function App() {
   const [mesaId] = useState(() => {
@@ -24,6 +25,7 @@ function App() {
     return params.get("mesa")?.trim() || null;
   });
   const [showTableModal, setShowTableModal] = useState(true);
+  const [orderUpdates, setOrderUpdates] = useState<Record<string, number>>({});
 
   useEffect(() => {
     if (mesaId) {
@@ -39,6 +41,32 @@ function App() {
     }
   }, [mesaId]);
 
+  useEffect(() => {
+    function refreshOrder(orderId: string) {
+      if (!orderId) return;
+
+      setOrderUpdates((current) => ({
+        ...current,
+        [orderId]: (current[orderId] || 0) + 1,
+      }));
+    }
+
+    function handleOrderStatus(orderId: string) {
+      refreshOrder(orderId);
+    }
+
+    function handleNewMessage(event: { orderId: string }) {
+      refreshOrder(event.orderId);
+    }
+
+    socket.on("order-status.created", handleOrderStatus);
+    socket.on("message.created", handleNewMessage);
+
+    return () => {
+      socket.off("order-status.created", handleOrderStatus);
+      socket.off("message.created", handleNewMessage);
+    };
+  }, []);
   return (
     <>
       <ScrollToTop />
@@ -58,7 +86,10 @@ function App() {
           <Route path="foodDetails" element={<FoodDetails />} />
           <Route path="cart" element={<Cart />} />
           <Route path="checkout" element={<Checkout mesaId={mesaId} />} />
-          <Route path="order-inform" element={<OrderInform />} />
+          <Route
+            path="order-inform"
+            element={<OrderInform orderUpdates={orderUpdates} />}
+          />
           <Route path="pedidos" element={<Orders />} />
           {/* <Route path="favoritos" element={<Favorites />} /> */}
           <Route path="mensagens" element={<Messages />} />

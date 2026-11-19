@@ -1,3 +1,8 @@
+import {
+  getOrderStatus,
+  isTableOrder,
+  isFinishedOrder,
+} from "../../utils/orderStatus";
 import type { FormEvent } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -32,7 +37,10 @@ import { ChatService } from "../../service/chat.service";
 import { formatOrderCode } from "../../utils/formatOrderCode";
 import { playNotificationSound } from "../../utils/notificationSound";
 import { getRequestErrorMessage } from "../../utils/getRequestErrorMessage";
-import { getOrderImageUrl, handleOrderImageError } from "../../utils/orderImage";
+import {
+  getOrderImageUrl,
+  handleOrderImageError,
+} from "../../utils/orderImage";
 import styles from "./order-inform.module.css";
 import type { ChatMessageResponseDto } from "../../dtos/response/chat-message-response.dto";
 
@@ -90,17 +98,11 @@ const statuses: Array<{ status: string; label: string; icon: LucideIcon }> = [
 const statusMessages: Record<string, string> = {
   RECEIVED: "Recebemos seu pedido!",
   PREPARING: "Seu pedido está sendo preparado!",
+  READY: "Seu pedido está pronto!",
   ON_ROUTE: "Seu pedido está a caminho!",
   DELIVERED: "Seu pedido foi entregue!",
   CANCELED: "Seu pedido foi cancelado.",
 };
-
-const progressClasses = [
-  styles.progress0,
-  styles.progress25,
-  styles.progress50,
-  styles.progress75,
-];
 
 function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(" ");
@@ -130,13 +132,6 @@ function paymentIcon(method?: PaymentMethodEnum) {
   return ReceiptText;
 }
 
-function statusIndex(status?: string) {
-  if (status === "PREPARING") return 1;
-  if (status === "ON_ROUTE") return 2;
-  if (status === "DELIVERED") return 3;
-  return 0;
-}
-
 function formatTime(value?: string) {
   if (!value) return "--:--";
   const date = new Date(value);
@@ -160,12 +155,15 @@ function readCartFallback() {
 
 function sortChatMessages(messages: ChatMessageResponseDto[]) {
   return [...messages].sort(
-    (a, b) =>
-      new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+    (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
   );
 }
 
-export default function OrderInform() {
+type OrderInformProps = {
+  orderUpdates: Record<string, number>;
+};
+
+export default function OrderInform({ orderUpdates }: OrderInformProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const state = (location.state || {}) as OrderState;
@@ -181,13 +179,17 @@ export default function OrderInform() {
   const previousStatusRef = useRef<string | null>(null);
   const miniChatRef = useRef<HTMLElement | null>(null);
   const miniChatMessagesRef = useRef<HTMLDivElement | null>(null);
+  const lookup = state.orderId || state.orderNumber || "";
+  const refreshKey = orderUpdates[order?.id || lookup] || 0;
 
   useEffect(() => {
-    if (!state.orderId && !state.orderNumber) return;
+    previousStatusRef.current = null;
+  }, [lookup]);
+
+  useEffect(() => {
+    if (!lookup) return;
 
     let active = true;
-    const lookup = state.orderId || state.orderNumber || "";
-    previousStatusRef.current = null;
 
     const loadOrder = () => {
       OrderController.findById(lookup)
@@ -213,19 +215,20 @@ export default function OrderInform() {
           if (!active) return;
           setOrder(null);
           setOrderError(
-            getRequestErrorMessage(error, "Não foi possível carregar o pedido."),
+            getRequestErrorMessage(
+              error,
+              "Não foi possível carregar o pedido.",
+            ),
           );
         });
     };
 
     loadOrder();
-    const intervalId = window.setInterval(loadOrder, 6000);
 
     return () => {
       active = false;
-      window.clearInterval(intervalId);
     };
-  }, [state.orderId, state.orderNumber]);
+  }, [lookup, refreshKey]);
 
   useEffect(() => {
     setMiniChatMessages(sortChatMessages(order?.chat?.messages || []));
@@ -290,13 +293,17 @@ export default function OrderInform() {
   const canUseChat = Boolean(order?.userId);
   const orderPaymentLabel = paymentLabel(orderPaymentMethod);
   const PaymentStatusIcon = paymentIcon(orderPaymentMethod);
-  const orderStatuses = statuses.map((step) => {
-    if (tableNumber && step.status === "ON_ROUTE") {
-      return { ...step, label: "A caminho da mesa", icon: UtensilsCrossed };
-    }
-
-    return step;
-  });
+  const tableOrder = order ? isTableOrder(order) : false;
+  const displayStatus = order ? getOrderStatus(order) : "RECEIVED";
+  const orderStatuses =
+    tableOrder || order?.type === "PICKUP"
+      ? [
+          { status: "RECEIVED", label: "Recebido", icon: Check },
+          { status: "PREPARING", label: "Em preparo", icon: CookingPot },
+          { status: "READY", label: "Pronto", icon: Check },
+          { status: "DELIVERED", label: "Entregue", icon: Home },
+        ]
+      : statuses;
   const stateAddressLine = state.address?.street
     ? `${state.address.street}${state.address.number ? `, ${state.address.number}` : ""}`
     : "";
@@ -324,15 +331,19 @@ export default function OrderInform() {
   const addressLine = orderAddressLine || stateAddressLine || "Nao informado";
   const addressSub = orderAddressSub || stateAddressSub;
 
-  const activeStatus = statusIndex(order?.status);
+  const activeStatus = Math.max(
+    0,
+    orderStatuses.findIndex((step) => step.status === displayStatus),
+  );
+  const isFinished = order ? isFinishedOrder(order) : false;
   const isCanceled = order?.status === "CANCELED";
-  const canCancel = !!order && order.status !== "DELIVERED" && !isCanceled;
-  const isMiniChatReadOnly = order?.status === "DELIVERED" || isCanceled;
-  const pageTitle = isCanceled
-    ? "Pedido cancelado"
-    : order?.status === "DELIVERED"
-      ? "Pedido entregue"
-      : "Pedido enviado";
+  const canCancel =
+    !!order && !isFinished && !isCanceled && displayStatus !== "READY";
+  const isMiniChatReadOnly = isFinished || isCanceled;
+  let pageTitle = "Pedido enviado";
+  if (isCanceled) pageTitle = "Pedido cancelado";
+  else if (displayStatus === "READY") pageTitle = "Pedido pronto";
+  else if (displayStatus === "DELIVERED") pageTitle = "Pedido entregue";
   const pageSubtitle = isCanceled
     ? "Este pedido foi cancelado."
     : "Acompanhe o status do seu pedido em tempo real.";
@@ -344,7 +355,9 @@ export default function OrderInform() {
         ? `Mesa ${tableNumber}`
         : `${addressLine}${addressSub ? `\n${addressSub}` : ""}`,
       action:
-        !tableNumber && addressLine !== "Nao informado" ? "Ver no mapa" : undefined,
+        !tableNumber && addressLine !== "Nao informado"
+          ? "Ver no mapa"
+          : undefined,
       actionIcon: Map,
     },
     {
@@ -355,7 +368,7 @@ export default function OrderInform() {
     },
     {
       icon: Clock,
-      label: "Previsão de entrega",
+      label: tableOrder ? "Previsão de preparo" : "Previsão de entrega",
       value: "35-45 min",
       yellow: true,
     },
@@ -397,7 +410,13 @@ export default function OrderInform() {
     event.preventDefault();
 
     const text = miniChatDraft.trim();
-    if (!text || !order || !canUseChat || isMiniChatReadOnly || isSendingChatMessage) {
+    if (
+      !text ||
+      !order ||
+      !canUseChat ||
+      isMiniChatReadOnly ||
+      isSendingChatMessage
+    ) {
       return;
     }
 
@@ -411,24 +430,25 @@ export default function OrderInform() {
         chatId: chat.id,
         text,
       });
-      const nextMessages = sortChatMessages([
-        ...(chat.messages || []),
-        createdMessage,
-      ]);
+      setOrder((current) => {
+        if (!current || current.id !== order.id) return current;
 
-      setOrder((current) =>
-        current
-          ? {
-              ...current,
-              chatId: chat.id,
-              chat: {
-                ...chat,
-                messages: nextMessages,
-              },
-            }
-          : current,
-      );
-      setMiniChatMessages(nextMessages);
+        const messages = current.chat?.messages || chat.messages || [];
+        const hasMessage = messages.some(
+          (message) => message.id === createdMessage.id,
+        );
+
+        return {
+          ...current,
+          chatId: chat.id,
+          chat: {
+            ...chat,
+            messages: hasMessage
+              ? messages
+              : sortChatMessages([...messages, createdMessage]),
+          },
+        };
+      });
       setMiniChatDraft("");
     } catch {
       window.alert("Não foi possível enviar a mensagem.");
@@ -440,7 +460,11 @@ export default function OrderInform() {
   return (
     <main className={styles.page}>
       <div className={styles.shell} data-enter="page">
-        <button type="button" className={styles.backButton} onClick={() => navigate("/pedidos")}>
+        <button
+          type="button"
+          className={styles.backButton}
+          onClick={() => navigate("/pedidos")}
+        >
           <ArrowLeft size={16} /> Voltar
         </button>
         <header className={styles.header}>
@@ -486,17 +510,31 @@ export default function OrderInform() {
         </header>
 
         {orderError && (
-          <p className={styles.emptyText} role="alert">{orderError}</p>
+          <p className={styles.emptyText} role="alert">
+            {orderError}
+          </p>
         )}
 
         <section className={cx(styles.panel, styles.statusPanel)}>
-          <div className={styles.statusTrack}>
-            <div className={styles.statusTrackBase} />
+          <div
+            className={styles.statusTrack}
+            style={{
+              gridTemplateColumns: `repeat(${orderStatuses.length}, minmax(0, 1fr))`,
+            }}
+          >
             <div
-              className={cx(
-                styles.statusTrackFill,
-                progressClasses[activeStatus],
-              )}
+              className={styles.statusTrackBase}
+              style={{
+                left: `${50 / orderStatuses.length}%`,
+                width: `${(100 * (orderStatuses.length - 1)) / orderStatuses.length}%`,
+              }}
+            />
+            <div
+              className={styles.statusTrackFill}
+              style={{
+                left: `${50 / orderStatuses.length}%`,
+                width: `${(100 * activeStatus) / orderStatuses.length}%`,
+              }}
             />
 
             {orderStatuses.map((step, index) => {
@@ -590,7 +628,9 @@ export default function OrderInform() {
 
           <div className={styles.sideGrid}>
             <section className={cx(styles.card, styles.deliveryCard)}>
-              <div className={cx(styles.sectionTitle, styles.sectionTitleBetween)}>
+              <div
+                className={cx(styles.sectionTitle, styles.sectionTitleBetween)}
+              >
                 <span className={styles.sectionTitleLabel}>
                   <MapPin />
                   {tableNumber ? "Entrega na mesa" : "Entrega"}
@@ -663,9 +703,13 @@ export default function OrderInform() {
                     const active = index === activeStatus;
                     const completed = index < activeStatus;
                     const done = completed || active;
-                    const historyItem = order?.history?.find(
-                      (item) => item.status === step.status,
-                    );
+                    const historyItem = order?.history
+                      ?.filter(
+                        (item) =>
+                          getOrderStatus({ ...order, status: item.status }) ===
+                          step.status,
+                      )
+                      .at(-1);
 
                     return (
                       <div
@@ -692,17 +736,13 @@ export default function OrderInform() {
                           {done ? formatTime(historyItem?.createdAt) : "--:--"}
                         </span>
                         <span className={styles.timelineLabel}>
-                          {active ? historyItem?.label || step.label : step.label}
+                          {step.label}
                         </span>
                         {active ? (
                           <span className={styles.timelineBadge}>
-                            {order?.status === "PREPARING"
-                              ? "Em preparo"
-                              : order?.status === "ON_ROUTE"
-                                ? "Saiu para entrega"
-                                : order?.status === "DELIVERED"
-                                  ? "Entregue"
-                                  : "Aguardando confirmação"}
+                            {displayStatus === "RECEIVED"
+                              ? "Aguardando confirmação"
+                              : step.label}
                           </span>
                         ) : null}
                       </div>
@@ -710,11 +750,29 @@ export default function OrderInform() {
                   })}
                 </div>
                 {order && (
-                  <aside className={cx(styles.statusFeedback, isCanceled && styles.statusFeedbackCanceled)}>
-                    {isCanceled ? <XCircle aria-hidden="true" /> : <CookingPot aria-hidden="true" />}
+                  <aside
+                    className={cx(
+                      styles.statusFeedback,
+                      isCanceled && styles.statusFeedbackCanceled,
+                    )}
+                  >
+                    {isCanceled ? (
+                      <XCircle aria-hidden="true" />
+                    ) : isFinished ? (
+                      <Check aria-hidden="true" />
+                    ) : (
+                      <CookingPot aria-hidden="true" />
+                    )}
                     <div>
-                      <strong>{statusMessages[order.status] || "Acompanhe seu pedido"}</strong>
-                      <p>{isCanceled ? "Consulte os detalhes acima." : "Agradecemos pela preferência!"}</p>
+                      <strong>
+                        {statusMessages[displayStatus] ||
+                          "Acompanhe seu pedido"}
+                      </strong>
+                      <p>
+                        {isCanceled
+                          ? "Consulte os detalhes acima."
+                          : "Agradecemos pela preferência!"}
+                      </p>
                     </div>
                   </aside>
                 )}
@@ -792,7 +850,7 @@ export default function OrderInform() {
                     ? "Atendimento encerrado - apenas leitura"
                     : isSendingChatMessage
                       ? "Enviando mensagem..."
-                    : "Digite sua mensagem"
+                      : "Digite sua mensagem"
                 }
               />
               {!isMiniChatReadOnly ? (
@@ -800,7 +858,9 @@ export default function OrderInform() {
                   type="submit"
                   className={styles.miniChatSendButton}
                   aria-label="Enviar mensagem"
-                  disabled={isSendingChatMessage || !miniChatDraft.trim() || !order}
+                  disabled={
+                    isSendingChatMessage || !miniChatDraft.trim() || !order
+                  }
                 >
                   <Send />
                 </button>
