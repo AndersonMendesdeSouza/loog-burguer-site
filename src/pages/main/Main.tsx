@@ -24,6 +24,13 @@ import type { FoodResponseDto } from "../../dtos/Food-Response.Dto";
 import { toast, ToastContainer } from "react-toastify";
 import { useStoreStatus } from "../../hooks/useStoreStatus";
 import { ProductService } from "../../service/product.service";
+import TableIdentifiedMesa from "../../components/TableIdentifiedModal/TableIdentifiedMesa";
+import type { TableSession } from "../../utils/tableSessionStorage";
+
+type MainProps = {
+  tableSession: TableSession | null;
+  tableSessionExpired: boolean;
+};
 
 const categoryIcons: Record<string, LucideIcon> = {
   Sanduíches: HamburgerIcon,
@@ -32,7 +39,7 @@ const categoryIcons: Record<string, LucideIcon> = {
   Sobremesas: IceCream,
 };
 
-export default function Main() {
+export default function Main({ tableSession, tableSessionExpired }: MainProps) {
   const [category, setCategory] = useState<string | null>(null);
   const navigation = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -146,6 +153,11 @@ export default function Main() {
             setSearch("");
             searchRef.current?.blur();
           }}
+        />
+
+        <TableIdentifiedMesa
+          session={tableSession}
+          expired={tableSessionExpired}
         />
 
         {loading ? (

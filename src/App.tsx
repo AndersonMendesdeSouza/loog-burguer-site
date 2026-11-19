@@ -22,7 +22,6 @@ import MessageDetails from "./pages/messages/MessageDetails";
 import { MessageNotificationsProvider } from "./contexts/MessageNotificationsContext";
 import Messages from "./pages/messages/Messages";
 import Register from "./pages/register/register";
-import TableIdentifiedMesa from "./components/TableIdentifiedModal/TableIdentifiedMesa";
 import TableIdentifiedModal from "./components/TableIdentifiedMesa/TableIdentifiedModal";
 import { socket } from "./service/gatway";
 import {
@@ -174,13 +173,20 @@ function App() {
           onClose={() => setShowExpiredModal(false)}
         />
       )}
-      <TableIdentifiedMesa mesaId={mesaId} />
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/" element={<DashboardLayout />}>
           <Route index element={<Navigate to="/main" replace />} />
-          <Route path="main" element={<Main />} />
+          <Route
+            path="main"
+            element={
+              <Main
+                tableSession={tableSession}
+                tableSessionExpired={tableSessionExpired}
+              />
+            }
+          />
           <Route path="foodDetails" element={<FoodDetails />} />
           <Route path="cart" element={<Cart />} />
           <Route
