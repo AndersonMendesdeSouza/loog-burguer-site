@@ -12,6 +12,15 @@ import { socket } from "../service/gatway";
 import { OrderService } from "../service/order.service";
 import { getGuestOrderToken } from "../utils/guestOrderStorage";
 import type { ChatMessageResponseDto } from "../dtos/response/chat-message-response.dto";
+import { MessageSquare } from "lucide-react";
+import { toast, ToastContainer, type ToastOptions } from "react-toastify";
+import {
+  playNotificationSound,
+  unlockNotificationSound,
+} from "../utils/notificationSound";
+
+const MESSAGE_TOAST_ID = "site-new-message";
+const MESSAGE_TOAST_CONTAINER_ID = "site-message-notifications";
 
 type MessageNotification = {
   id: string;
@@ -94,6 +103,18 @@ function MessageSession({
   );
 
   useEffect(() => {
+    const unlockSound = () => {
+      void unlockNotificationSound();
+    };
+    window.addEventListener("pointerdown", unlockSound, { once: true });
+    window.addEventListener("keydown", unlockSound, { once: true });
+    return () => {
+      window.removeEventListener("pointerdown", unlockSound);
+      window.removeEventListener("keydown", unlockSound);
+    };
+  }, []);
+
+  useEffect(() => {
     if (loading) return;
     try {
       if (notifications.length)
@@ -108,6 +129,9 @@ function MessageSession({
     if (loading) return;
     let active = true;
     const pendingIds = new Set<string>();
+    const knownMessageIds = new Set(
+      readNotifications(storage, key).map((message) => message.id),
+    );
     async function handleMessage(event: {
       orderId: string;
       message: ChatMessageResponseDto;
@@ -116,11 +140,12 @@ function MessageSession({
       if (!event?.orderId || !message?.id || message.senderType !== "ADMIN")
         return;
       if (!userId && !getGuestOrderToken(event.orderId)) return;
-      if (pendingIds.has(message.id)) return;
+      if (knownMessageIds.has(message.id) || pendingIds.has(message.id)) return;
       pendingIds.add(message.id);
       try {
         const order = await OrderService.findById(event.orderId);
         if (!active || (userId && order.userId !== userId)) return;
+        knownMessageIds.add(message.id);
         setNotifications((current) => {
           if (current.some((item) => item.id === message.id)) return current;
           return [
@@ -135,6 +160,33 @@ function MessageSession({
             ...current,
           ];
         });
+        void playNotificationSound();
+
+        const toastOptions: ToastOptions = {
+          containerId: MESSAGE_TOAST_CONTAINER_ID,
+          toastId: MESSAGE_TOAST_ID,
+          autoClose: 3000,
+          hideProgressBar: true,
+          closeButton: false,
+          closeOnClick: true,
+          pauseOnHover: false,
+          pauseOnFocusLoss: false,
+          icon: (
+            <MessageSquare
+              size={18}
+              aria-hidden="true"
+              color="var(--highlight)"
+            />
+          ),
+        };
+        if (toast.isActive(MESSAGE_TOAST_ID, MESSAGE_TOAST_CONTAINER_ID)) {
+          toast.update(MESSAGE_TOAST_ID, {
+            ...toastOptions,
+            render: "Nova mensagem!",
+          });
+        } else {
+          toast.info("Nova mensagem!", toastOptions);
+        }
       } catch (error) {
         console.error(
           "Não foi possível verificar a mensagem do pedido:",
@@ -148,8 +200,9 @@ function MessageSession({
     return () => {
       active = false;
       socket.off("message.created", handleMessage);
+      toast.dismiss(MESSAGE_TOAST_ID);
     };
-  }, [loading, userId]);
+  }, [loading, userId, storage, key]);
 
   const markRead = useCallback((orderId: string, messageIds: string[]) => {
     const ids = new Set(messageIds);
@@ -177,6 +230,23 @@ function MessageSession({
         clearAll,
       }}
     >
+      <ToastContainer
+        containerId={MESSAGE_TOAST_CONTAINER_ID}
+        position="top-right"
+        limit={1}
+        style={{ width: "min(220px, calc(100vw - 24px))" }}
+        toastStyle={{
+          minHeight: 42,
+          padding: "8px 12px",
+          fontSize: 13,
+          fontFamily: "inherit",
+          borderRadius: 8,
+          boxShadow: "none",
+          border: "1px solid var(--border-color)",
+          background: "var(--bg-secondary)",
+          color: "var(--text-primary)",
+        }}
+      />
       {children}
     </MessageNotificationsContext.Provider>
   );
