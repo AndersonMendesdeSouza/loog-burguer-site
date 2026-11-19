@@ -103,7 +103,11 @@ function formatAddressDetails(address: AddressResponseDto) {
     .join(" - ");
 }
 
-export default function Checkout({ mesaId, tableSessionExpired, onValidateTableSession }: TableIdentifiedMesaProps) {
+export default function Checkout({
+  mesaId,
+  tableSessionExpired,
+  onValidateTableSession,
+}: TableIdentifiedMesaProps) {
   const nav = useNavigate();
   const location = useLocation();
   const { isAuthenticated, loading: authLoading } = useAuth();
@@ -295,8 +299,16 @@ export default function Checkout({ mesaId, tableSessionExpired, onValidateTableS
   const manualAddressValid = [manualAddress.street, manualAddress.number, manualAddress.neighborhood, manualAddress.city].every((value) => value.trim().length > 0)
     && /^[A-Z]{2}$/.test(manualAddress.state) && /^\d{5}-?\d{3}$/.test(manualAddress.zipCode);
   let step2Done = isAuthenticated && !!selectedAddress && !loadingAddresses && !addressError;
-  if (isTableOrder) step2Done = hasIdentifiedTable && !tableSessionExpired && !!selectedTable && !loadingTables && !tableError;
-  else if (useManualAddress) step2Done = manualAddressValid;
+  if (isTableOrder) {
+    step2Done =
+      hasIdentifiedTable &&
+      !tableSessionExpired &&
+      !!selectedTable &&
+      !loadingTables &&
+      !tableError;
+  } else if (useManualAddress) {
+    step2Done = manualAddressValid;
+  }
 
   const step3Done =
     payment !== PaymentMethod.CASH ||
@@ -591,16 +603,16 @@ export default function Checkout({ mesaId, tableSessionExpired, onValidateTableS
               </p>
             ) : (
               <>
-            <span className={styles.label} id="table-options-label">Selecione a mesa</span>
-            {loadingTables && <p role="status" className={styles.label}>Carregando mesas...</p>}
-            {tableError && <p role="alert" className={styles.label}>{tableError}</p>}
-            {!loadingTables && !tableError && tables.length === 0 && <p className={styles.label}>Nenhuma mesa disponível no momento.</p>}
-            <div className={styles.tableChoices} role="group" aria-labelledby="table-options-label">
-              {tables.map((table) => (
-                <button key={table.id} type="button" className={`${styles.tableChoice} ${table.id === tableId ? styles.tableChoiceActive : ""}`} aria-label={`Mesa ${table.number}`} aria-pressed={table.id === tableId} disabled={isSubmitting} onClick={() => setTableId(table.id)}>{table.number}</button>
-              ))}
-            </div>
-            <p className={styles.label}>Seu pedido será levado até a mesa selecionada, sem taxa de entrega.</p>
+                <span className={styles.label} id="table-options-label">Selecione a mesa</span>
+                {loadingTables && <p role="status" className={styles.label}>Carregando mesas...</p>}
+                {tableError && <p role="alert" className={styles.label}>{tableError}</p>}
+                {!loadingTables && !tableError && tables.length === 0 && <p className={styles.label}>Nenhuma mesa disponível no momento.</p>}
+                <div className={styles.tableChoices} role="group" aria-labelledby="table-options-label">
+                  {tables.map((table) => (
+                    <button key={table.id} type="button" className={`${styles.tableChoice} ${table.id === tableId ? styles.tableChoiceActive : ""}`} aria-label={`Mesa ${table.number}`} aria-pressed={table.id === tableId} disabled={isSubmitting} onClick={() => setTableId(table.id)}>{table.number}</button>
+                  ))}
+                </div>
+                <p className={styles.label}>Seu pedido será levado até a mesa selecionada, sem taxa de entrega.</p>
               </>
             )}
           </section>

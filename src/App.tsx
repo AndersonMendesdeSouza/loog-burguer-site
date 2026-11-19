@@ -109,10 +109,12 @@ function App() {
       Math.max(0, expiresAt - Date.now()),
     );
     window.addEventListener("focus", checkExpiration);
+    window.addEventListener("pageshow", checkExpiration);
     document.addEventListener("visibilitychange", handleVisibilityChange);
     return () => {
       window.clearTimeout(timeoutId);
       window.removeEventListener("focus", checkExpiration);
+      window.removeEventListener("pageshow", checkExpiration);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, [tableSession, tableSessionExpired, expireTableSession]);

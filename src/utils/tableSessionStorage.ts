@@ -1,5 +1,5 @@
 export const TABLE_SESSION_STORAGE_KEY = "mesaId";
-export const TABLE_SESSION_DURATION_MS = 20 * 60 * 1000;
+export const TABLE_SESSION_DURATION_MS = 1 * 60 * 1000;
 
 export type TableSession = {
   mesaId: string;
