@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef } from "react";
-import { CircleCheck } from "lucide-react";
+import { CircleAlert, CircleCheck } from "lucide-react";
 import styles from "./TableIdentifiedModal.module.css";
 
 type TableIdentifiedModalProps = {
@@ -9,6 +9,7 @@ type TableIdentifiedModalProps = {
   closeLabel?: string;
   confirmLabel?: string;
   isConfirming?: boolean;
+  expired?: boolean;
   onConfirm?: () => void;
   onClose: () => void;
 };
@@ -20,12 +21,14 @@ export default function TableIdentifiedModal({
   closeLabel = "Fechar",
   confirmLabel = "Confirmar pedido",
   isConfirming = false,
+  expired = false,
   onConfirm,
   onClose,
 }: TableIdentifiedModalProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const titleId = useId();
   const descriptionId = useId();
+  const Icon = expired ? CircleAlert : CircleCheck;
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -47,7 +50,7 @@ export default function TableIdentifiedModal({
       aria-busy={isConfirming}
     >
       <span className={styles.icon} aria-hidden="true">
-        <CircleCheck size={28} />
+        <Icon size={28} />
       </span>
       <h2 id={titleId}>{title}</h2>
       <p className={styles.tableNumber}>

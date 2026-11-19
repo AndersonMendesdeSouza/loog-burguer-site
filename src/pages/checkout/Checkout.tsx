@@ -64,6 +64,8 @@ type CheckoutCssVars = CSSProperties & {
 
 type TableIdentifiedMesaProps = {
   mesaId: string | null;
+  tableSessionExpired: boolean;
+  onValidateTableSession: () => boolean;
 };
 
 const LS_SELECTED_KEY = "mb_checkout_selected_address_v1";
@@ -101,7 +103,7 @@ function formatAddressDetails(address: AddressResponseDto) {
     .join(" - ");
 }
 
-export default function Checkout({ mesaId }: TableIdentifiedMesaProps) {
+export default function Checkout({ mesaId, tableSessionExpired, onValidateTableSession }: TableIdentifiedMesaProps) {
   const nav = useNavigate();
   const location = useLocation();
   const { isAuthenticated, loading: authLoading } = useAuth();
@@ -128,9 +130,9 @@ export default function Checkout({ mesaId }: TableIdentifiedMesaProps) {
   const identifiedTableNumber = mesaId?.trim() || "";
   const hasIdentifiedTable = identifiedTableNumber.length > 0;
   const [orderType, setOrderType] = useState<"table" | "delivery">(
-    () => (hasIdentifiedTable ? "table" : "delivery"),
+    () => (hasIdentifiedTable || tableSessionExpired ? "table" : "delivery"),
   );
-  const isTableOrder = hasIdentifiedTable && orderType === "table";
+  const isTableOrder = orderType === "table";
   const deliveryFee = !isTableOrder && items.length ? baseDeliveryFee : 0;
   const total = subtotal + deliveryFee;
   const storeStatus = useStoreStatus();
@@ -154,8 +156,9 @@ export default function Checkout({ mesaId }: TableIdentifiedMesaProps) {
     v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
   useEffect(() => {
+    if (tableSessionExpired) return;
     setOrderType(hasIdentifiedTable ? "table" : "delivery");
-  }, [hasIdentifiedTable]);
+  }, [hasIdentifiedTable, tableSessionExpired]);
 
   useEffect(() => {
     if (!isTableOrder || !identifiedTableNumber) return;
@@ -292,7 +295,7 @@ export default function Checkout({ mesaId }: TableIdentifiedMesaProps) {
   const manualAddressValid = [manualAddress.street, manualAddress.number, manualAddress.neighborhood, manualAddress.city].every((value) => value.trim().length > 0)
     && /^[A-Z]{2}$/.test(manualAddress.state) && /^\d{5}-?\d{3}$/.test(manualAddress.zipCode);
   let step2Done = isAuthenticated && !!selectedAddress && !loadingAddresses && !addressError;
-  if (isTableOrder) step2Done = !!selectedTable && !loadingTables && !tableError;
+  if (isTableOrder) step2Done = hasIdentifiedTable && !tableSessionExpired && !!selectedTable && !loadingTables && !tableError;
   else if (useManualAddress) step2Done = manualAddressValid;
 
   const step3Done =
@@ -353,6 +356,10 @@ export default function Checkout({ mesaId }: TableIdentifiedMesaProps) {
   }
 
   async function handleCreateOrder(tableConfirmed = false) {
+    if (isTableOrder && !onValidateTableSession()) {
+      setShowTableConfirmation(false);
+      return;
+    }
     if (!canSend) {
       alert("Preencha os dados obrigatórios do pedido");
       return;
@@ -416,7 +423,7 @@ export default function Checkout({ mesaId }: TableIdentifiedMesaProps) {
       }
     >
       <ToastContainer position="top-center" />
-      {isTableOrder && showTableConfirmation && (
+      {isTableOrder && !tableSessionExpired && showTableConfirmation && (
         <TableIdentifiedModal
           tableNumber={tableNumber.trim()}
           title="Confirmar mesa do pedido"
@@ -542,7 +549,7 @@ export default function Checkout({ mesaId }: TableIdentifiedMesaProps) {
             <span className={styles.label} id="order-type-label">
               Como você quer receber seu pedido?
             </span>
-            {hasIdentifiedTable ? (
+            {hasIdentifiedTable || tableSessionExpired ? (
               <div
                 className={styles.orderTypeSwitch}
                 role="group"
@@ -577,6 +584,13 @@ export default function Checkout({ mesaId }: TableIdentifiedMesaProps) {
               <UtensilsCrossed size={16} />
               <span>Pedido na mesa</span>
             </div>
+            {tableSessionExpired ? (
+              <p role="alert" className={styles.label}>
+                Sua identificação da mesa expirou. Aproxime o telefone da plaquinha
+                ou escaneie o QR Code novamente para pedir na mesa.
+              </p>
+            ) : (
+              <>
             <span className={styles.label} id="table-options-label">Selecione a mesa</span>
             {loadingTables && <p role="status" className={styles.label}>Carregando mesas...</p>}
             {tableError && <p role="alert" className={styles.label}>{tableError}</p>}
@@ -587,6 +601,8 @@ export default function Checkout({ mesaId }: TableIdentifiedMesaProps) {
               ))}
             </div>
             <p className={styles.label}>Seu pedido será levado até a mesa selecionada, sem taxa de entrega.</p>
+              </>
+            )}
           </section>
         ) : (
           <section className={styles.section}>
